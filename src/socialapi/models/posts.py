@@ -1,7 +1,5 @@
 """Post models."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -33,7 +31,7 @@ class ScheduledPost(BaseModel):
     retry_count: int = 0
     created_at: str
     updated_at: str
-    results: list[PostResult] = Field(default_factory=list)
+    results: list[PostResult] = Field(default_factory=lambda: [])
 
 
 class ScheduledPostsListResponse(BaseModel):

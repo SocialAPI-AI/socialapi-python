@@ -75,6 +75,7 @@ known-first-party = ["socialapi"]
 pythonVersion = "3.10"
 typeCheckingMode = "strict"
 include = ["src"]
+reportPrivateUsage = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

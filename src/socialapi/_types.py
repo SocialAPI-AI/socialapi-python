@@ -9,5 +9,6 @@ JSONValue: TypeAlias = "str | int | float | bool | None | dict[str, Any] | list[
 JSONDict: TypeAlias = dict[str, Any]
 Headers: TypeAlias = dict[str, str]
 
-# Query parameter types.
-QueryParams: TypeAlias = dict[str, str | int | None]
+# Query parameter types — uses Any to avoid dict invariance issues
+# when resources build params dicts and filter None values.
+QueryParams: TypeAlias = dict[str, Any]

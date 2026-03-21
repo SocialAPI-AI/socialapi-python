@@ -1,7 +1,5 @@
 """Interaction models."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -26,7 +24,7 @@ class Content(BaseModel):
     """Content of an interaction."""
 
     text: str = ""
-    media: list[Media] = Field(default_factory=list)
+    media: list[Media] = Field(default_factory=lambda: [])
 
 
 class Interaction(BaseModel):
