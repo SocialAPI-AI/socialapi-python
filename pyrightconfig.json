@@ -1,0 +1,8 @@
+{
+    "pythonVersion": "3.11",
+    "typeCheckingMode": "strict",
+    "include": ["src"],
+    "reportPrivateUsage": false,
+    "venvPath": ".",
+    "venv": ".venv"
+}
