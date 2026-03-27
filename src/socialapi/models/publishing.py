@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
+from datetime import datetime  # noqa: TC003
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict
+
+if TYPE_CHECKING:
+    from socialapi.models.posts import Post
 
 
 class TargetRequest(BaseModel):
@@ -16,7 +20,7 @@ class TargetRequest(BaseModel):
     media_ids: list[str] | None = None
     first_comment: str | None = None
     visibility: str | None = None
-    scheduled_at: str | None = None
+    scheduled_at: datetime | None = None
     platform_data: dict[str, Any] | None = None
 
 
@@ -30,7 +34,7 @@ class CreatePostRequest(BaseModel):
     media_ids: list[str] | None = None
     visibility: str | None = None
     first_comment: str | None = None
-    scheduled_at: str | None = None
+    scheduled_at: datetime | None = None
     publish_now: bool | None = None
     skip_duplicate_check: bool | None = None
     targets: list[TargetRequest] | None = None
@@ -46,7 +50,7 @@ class UpdatePostRequest(BaseModel):
     media_ids: list[str] | None = None
     visibility: str | None = None
     first_comment: str | None = None
-    scheduled_at: str | None = None
+    scheduled_at: datetime | None = None
     hidden: bool | None = None
     targets: list[TargetRequest] | None = None
 
@@ -68,7 +72,7 @@ class ValidatePostRequest(BaseModel):
     platforms: list[str] | None = None
     account_ids: list[str] | None = None
     media_ids: list[str] | None = None
-    scheduled_at: str | None = None
+    scheduled_at: datetime | None = None
     targets: list[TargetRequest] | None = None
 
 
@@ -95,7 +99,7 @@ class MediaUploadURL(BaseModel):
 
     media_id: str
     upload_url: str
-    expires_at: str
+    expires_at: datetime
 
 
 class MediaUploadResponse(BaseModel):
@@ -104,3 +108,24 @@ class MediaUploadResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     media_id: str
+
+
+class ImportRowError(BaseModel):
+    """Per-row error detail from CSV import."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    row: int
+    message: str
+
+
+class ImportPostsResponse(BaseModel):
+    """Response from ``POST /v1/posts/import``."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    total_rows: int
+    created: int
+    failed: int
+    errors: list[ImportRowError] | None = None
+    posts: list[Post] | None = None

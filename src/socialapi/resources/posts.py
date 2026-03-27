@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from socialapi.models.posts import Post, PostMetrics
@@ -23,8 +24,8 @@ class Posts:
         account_ids: list[str] | None = None,
         status: str | None = None,
         platform: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
         search: str | None = None,
         sort: str | None = None,
         hidden: bool | None = None,
@@ -38,8 +39,8 @@ class Posts:
             account_ids: Filter by connected account IDs.
             status: Filter by post status.
             platform: Filter by platform.
-            from_date: Start date filter (ISO 8601).
-            to_date: End date filter (ISO 8601).
+            from_date: Start date filter (datetime or ISO 8601 string).
+            to_date: End date filter (datetime or ISO 8601 string).
             search: Full-text search query.
             sort: Sort field and direction.
             hidden: Filter by hidden/visible state.
@@ -62,9 +63,9 @@ class Posts:
         if platform is not None:
             params["platform"] = platform
         if from_date is not None:
-            params["from"] = from_date
+            params["from"] = from_date.isoformat() if isinstance(from_date, datetime) else from_date
         if to_date is not None:
-            params["to"] = to_date
+            params["to"] = to_date.isoformat() if isinstance(to_date, datetime) else to_date
         if search is not None:
             params["search"] = search
         if sort is not None:
@@ -219,8 +220,8 @@ class AsyncPosts:
         account_ids: list[str] | None = None,
         status: str | None = None,
         platform: str | None = None,
-        from_date: str | None = None,
-        to_date: str | None = None,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
         search: str | None = None,
         sort: str | None = None,
         hidden: bool | None = None,
@@ -234,8 +235,8 @@ class AsyncPosts:
             account_ids: Filter by connected account IDs.
             status: Filter by post status.
             platform: Filter by platform.
-            from_date: Start date filter (ISO 8601).
-            to_date: End date filter (ISO 8601).
+            from_date: Start date filter (datetime or ISO 8601 string).
+            to_date: End date filter (datetime or ISO 8601 string).
             search: Full-text search query.
             sort: Sort field and direction.
             hidden: Filter by hidden/visible state.
@@ -258,9 +259,9 @@ class AsyncPosts:
         if platform is not None:
             params["platform"] = platform
         if from_date is not None:
-            params["from"] = from_date
+            params["from"] = from_date.isoformat() if isinstance(from_date, datetime) else from_date
         if to_date is not None:
-            params["to"] = to_date
+            params["to"] = to_date.isoformat() if isinstance(to_date, datetime) else to_date
         if search is not None:
             params["search"] = search
         if sort is not None:

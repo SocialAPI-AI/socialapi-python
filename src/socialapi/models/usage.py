@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -14,8 +16,8 @@ class UsageResponse(BaseModel):
     posts_limit: int
     interactions_used: int
     interactions_limit: int
-    period_start: str
-    period_end: str
+    period_start: datetime
+    period_end: datetime
 
 
 class AccountLimits(BaseModel):

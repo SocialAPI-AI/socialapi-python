@@ -20,10 +20,14 @@ if TYPE_CHECKING:
     import httpx
 
     from socialapi.resources.accounts import Accounts, AsyncAccounts
+    from socialapi.resources.brands import AsyncBrands, Brands
     from socialapi.resources.comments import AsyncComments, Comments
     from socialapi.resources.conversations import AsyncConversations, Conversations
+    from socialapi.resources.events import AsyncEvents, Events
     from socialapi.resources.feedback import AsyncFeedback, Feedback
+    from socialapi.resources.invites import AsyncInvites, Invites
     from socialapi.resources.keys import AsyncKeys, Keys
+    from socialapi.resources.media import AsyncMedia, Media
     from socialapi.resources.mentions import AsyncMentions, Mentions
     from socialapi.resources.posts import AsyncPosts, Posts
     from socialapi.resources.publishing import AsyncPublishing, Publishing
@@ -78,10 +82,14 @@ class SocialAPI:
 
     # Resource namespaces (set in __init__)
     accounts: Accounts
+    brands: Brands
     comments: Comments
     conversations: Conversations
+    events: Events
     feedback: Feedback
+    invites: Invites
     keys: Keys
+    media: Media
     mentions: Mentions
     posts: Posts
     publishing: Publishing
@@ -128,10 +136,14 @@ class SocialAPI:
 
         # Lazy import to avoid circular imports at module level
         from socialapi.resources.accounts import Accounts as _Accounts
+        from socialapi.resources.brands import Brands as _Brands
         from socialapi.resources.comments import Comments as _Comments
         from socialapi.resources.conversations import Conversations as _Conversations
+        from socialapi.resources.events import Events as _Events
         from socialapi.resources.feedback import Feedback as _Feedback
+        from socialapi.resources.invites import Invites as _Invites
         from socialapi.resources.keys import Keys as _Keys
+        from socialapi.resources.media import Media as _Media
         from socialapi.resources.mentions import Mentions as _Mentions
         from socialapi.resources.posts import Posts as _Posts
         from socialapi.resources.publishing import Publishing as _Publishing
@@ -141,10 +153,14 @@ class SocialAPI:
         from socialapi.resources.webhooks import Webhooks as _Webhooks
 
         self.accounts = _Accounts(self._client)
+        self.brands = _Brands(self._client)
         self.comments = _Comments(self._client)
         self.conversations = _Conversations(self._client)
+        self.events = _Events(self._client)
         self.feedback = _Feedback(self._client)
+        self.invites = _Invites(self._client)
         self.keys = _Keys(self._client)
+        self.media = _Media(self._client)
         self.mentions = _Mentions(self._client)
         self.posts = _Posts(self._client)
         self.publishing = _Publishing(self._client)
@@ -215,10 +231,14 @@ class AsyncSocialAPI:
 
     # Resource namespaces (set in __init__)
     accounts: AsyncAccounts
+    brands: AsyncBrands
     comments: AsyncComments
     conversations: AsyncConversations
+    events: AsyncEvents
     feedback: AsyncFeedback
+    invites: AsyncInvites
     keys: AsyncKeys
+    media: AsyncMedia
     mentions: AsyncMentions
     posts: AsyncPosts
     publishing: AsyncPublishing
@@ -265,10 +285,14 @@ class AsyncSocialAPI:
 
         # Lazy import to avoid circular imports at module level
         from socialapi.resources.accounts import AsyncAccounts as _AsyncAccounts
+        from socialapi.resources.brands import AsyncBrands as _AsyncBrands
         from socialapi.resources.comments import AsyncComments as _AsyncComments
         from socialapi.resources.conversations import AsyncConversations as _AsyncConversations
+        from socialapi.resources.events import AsyncEvents as _AsyncEvents
         from socialapi.resources.feedback import AsyncFeedback as _AsyncFeedback
+        from socialapi.resources.invites import AsyncInvites as _AsyncInvites
         from socialapi.resources.keys import AsyncKeys as _AsyncKeys
+        from socialapi.resources.media import AsyncMedia as _AsyncMedia
         from socialapi.resources.mentions import AsyncMentions as _AsyncMentions
         from socialapi.resources.posts import AsyncPosts as _AsyncPosts
         from socialapi.resources.publishing import AsyncPublishing as _AsyncPublishing
@@ -278,10 +302,14 @@ class AsyncSocialAPI:
         from socialapi.resources.webhooks import AsyncWebhooks as _AsyncWebhooks
 
         self.accounts = _AsyncAccounts(self._client)
+        self.brands = _AsyncBrands(self._client)
         self.comments = _AsyncComments(self._client)
         self.conversations = _AsyncConversations(self._client)
+        self.events = _AsyncEvents(self._client)
         self.feedback = _AsyncFeedback(self._client)
+        self.invites = _AsyncInvites(self._client)
         self.keys = _AsyncKeys(self._client)
+        self.media = _AsyncMedia(self._client)
         self.mentions = _AsyncMentions(self._client)
         self.posts = _AsyncPosts(self._client)
         self.publishing = _AsyncPublishing(self._client)

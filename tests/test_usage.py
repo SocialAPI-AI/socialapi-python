@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from .conftest import BASE_URL
 
 
@@ -22,7 +24,7 @@ def test_get_usage(httpx_mock, client) -> None:
     assert usage.brands_limit == 10
     assert usage.posts_used == 45
     assert usage.posts_limit == -1
-    assert usage.period_start == "2026-03-01T00:00:00Z"
+    assert usage.period_start == datetime(2026, 3, 1, tzinfo=UTC)
 
 
 def test_get_account_limits(httpx_mock, client) -> None:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -17,11 +19,11 @@ class Conversation(BaseModel):
     participant_name: str
     participant_picture: str | None = None
     last_message: str | None = None
-    last_message_at: str | None = None
+    last_message_at: datetime | None = None
     status: str = "active"
     unread_count: int = 0
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class Message(BaseModel):
@@ -38,7 +40,7 @@ class Message(BaseModel):
     sender_name: str
     attachment_type: str | None = None
     attachment_url: str | None = None
-    created_at: str
+    created_at: datetime
 
 
 class SendMessageRequest(BaseModel):

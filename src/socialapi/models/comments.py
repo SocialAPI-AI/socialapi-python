@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -35,7 +37,7 @@ class InboxComment(BaseModel):
     is_hidden: bool = False
     is_liked: bool = False
     parent_id: str | None = None
-    created_at: str
+    created_at: datetime
     capabilities: CommentCapabilities
 
 
@@ -54,8 +56,8 @@ class CommentedPost(BaseModel):
     permalink: str | None = None
     comment_count: int = 0
     like_count: int = 0
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class ReplyToCommentRequest(BaseModel):

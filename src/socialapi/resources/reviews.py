@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from socialapi.models.reviews import ReplyToReviewResponse, Review
@@ -22,6 +23,7 @@ class Reviews:
         *,
         account_id: str | None = None,
         platform: str | None = None,
+        since: datetime | str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
@@ -34,6 +36,7 @@ class Reviews:
         Args:
             account_id: Filter by connected account.
             platform: Filter by platform.
+            since: Only return reviews after this datetime or ISO 8601 string.
             limit: Maximum number of results.
             cursor: Pagination cursor from a previous response.
             timeout: Override the client-level timeout for this request.
@@ -50,6 +53,8 @@ class Reviews:
             params["account_id"] = account_id
         if platform is not None:
             params["platform"] = platform
+        if since is not None:
+            params["since"] = since.isoformat() if isinstance(since, datetime) else since
         if limit is not None:
             params["limit"] = limit
         if cursor is not None:
@@ -156,6 +161,7 @@ class AsyncReviews:
         *,
         account_id: str | None = None,
         platform: str | None = None,
+        since: datetime | str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
@@ -168,6 +174,7 @@ class AsyncReviews:
         Args:
             account_id: Filter by connected account.
             platform: Filter by platform.
+            since: Only return reviews after this datetime or ISO 8601 string.
             limit: Maximum number of results.
             cursor: Pagination cursor from a previous response.
             timeout: Override the client-level timeout for this request.
@@ -184,6 +191,8 @@ class AsyncReviews:
             params["account_id"] = account_id
         if platform is not None:
             params["platform"] = platform
+        if since is not None:
+            params["since"] = since.isoformat() if isinstance(since, datetime) else since
         if limit is not None:
             params["limit"] = limit
         if cursor is not None:

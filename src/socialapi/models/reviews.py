@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -14,7 +16,7 @@ class Review(BaseModel):
     rating: int
     text: str | None = None
     author: str
-    created_at: str
+    created_at: datetime
 
 
 class ReplyToReviewRequest(BaseModel):

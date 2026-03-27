@@ -8,6 +8,7 @@ from socialapi.models.accounts import (
     OAuthExchangeRequest,
     OAuthExchangeResponse,
 )
+from socialapi.models.brands import Brand, CreateBrandRequest, UpdateBrandRequest
 from socialapi.models.comments import (
     CommentCapabilities,
     CommentedPost,
@@ -23,8 +24,11 @@ from socialapi.models.conversations import (
     SendMessageResponse,
     UpdateConversationRequest,
 )
+from socialapi.models.events import Event, EventsListResponse
 from socialapi.models.feedback import SendFeedbackRequest
+from socialapi.models.invites import CreateInviteRequest, Invite, InviteListItem
 from socialapi.models.keys import APIKey, CreateKeyRequest, CreateKeyResponse
+from socialapi.models.media import MediaItem, StorageUsage
 from socialapi.models.mentions import Mention, MentionAuthor, MentionContent, MentionMedia
 from socialapi.models.posts import (
     Post,
@@ -37,6 +41,8 @@ from socialapi.models.posts import (
 )
 from socialapi.models.publishing import (
     CreatePostRequest,
+    ImportPostsResponse,
+    ImportRowError,
     MediaUploadResponse,
     MediaUploadURL,
     PlatformConstraints,
@@ -67,6 +73,8 @@ __all__: list[str] = [
     "Account",
     # usage
     "AccountLimits",
+    # brands
+    "Brand",
     # comments
     "CommentCapabilities",
     "CommentedPost",
@@ -75,6 +83,10 @@ __all__: list[str] = [
     "ConnectOAuthResponse",
     # conversations
     "Conversation",
+    # brands
+    "CreateBrandRequest",
+    # invites
+    "CreateInviteRequest",
     "CreateKeyRequest",
     "CreateKeyResponse",
     # publishing
@@ -82,7 +94,18 @@ __all__: list[str] = [
     # webhooks
     "CreateWebhookRequest",
     "CreateWebhookResponse",
+    # events
+    "Event",
+    "EventsListResponse",
+    # publishing
+    "ImportPostsResponse",
+    "ImportRowError",
     "InboxComment",
+    # invites
+    "Invite",
+    "InviteListItem",
+    # media
+    "MediaItem",
     "MediaUploadResponse",
     "MediaUploadURL",
     # mentions
@@ -111,8 +134,12 @@ __all__: list[str] = [
     "SendFeedbackRequest",
     "SendMessageRequest",
     "SendMessageResponse",
+    # media
+    "StorageUsage",
     "TargetRequest",
     "UnpublishRequest",
+    # brands
+    "UpdateBrandRequest",
     "UpdateConversationRequest",
     "UpdatePostRequest",
     "UpdateReviewReplyRequest",

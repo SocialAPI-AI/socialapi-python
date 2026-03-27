@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
@@ -44,6 +45,6 @@ class Mention(BaseModel):
     author: MentionAuthor
     content: MentionContent
     metadata: dict[str, Any] | None = None
-    created_at: str
+    created_at: datetime
     account_id: str
     platform_id: str

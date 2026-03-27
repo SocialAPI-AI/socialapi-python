@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from socialapi.models.posts import Post, ValidationResult
-from socialapi.models.publishing import MediaUploadURL, PlatformConstraints
+from socialapi.models.publishing import ImportPostsResponse, MediaUploadURL, PlatformConstraints
 
 if TYPE_CHECKING:
     from socialapi._base_client import BaseAsyncClient, BaseSyncClient
@@ -25,7 +26,7 @@ class Publishing:
         media_ids: list[str] | None = None,
         visibility: str | None = None,
         first_comment: str | None = None,
-        scheduled_at: str | None = None,
+        scheduled_at: datetime | str | None = None,
         publish_now: bool = False,
         skip_duplicate_check: bool = False,
         targets: list[dict[str, Any]] | None = None,
@@ -39,7 +40,7 @@ class Publishing:
             media_ids: Previously uploaded media file IDs to attach.
             visibility: Who can see the post (``"public"``, ``"private"``, ``"connections_only"``).
             first_comment: Auto-posted as first comment after publishing.
-            scheduled_at: ISO 8601 datetime for scheduled publication.
+            scheduled_at: Datetime or ISO 8601 string for scheduled publication.
             publish_now: Immediately publish if targets are provided.
             skip_duplicate_check: Bypass duplicate content detection.
             targets: Per-platform target configurations.
@@ -62,7 +63,7 @@ class Publishing:
         if first_comment is not None:
             body["first_comment"] = first_comment
         if scheduled_at is not None:
-            body["scheduled_at"] = scheduled_at
+            body["scheduled_at"] = scheduled_at.isoformat() if isinstance(scheduled_at, datetime) else scheduled_at
         if publish_now:
             body["publish_now"] = True
         if skip_duplicate_check:
@@ -81,7 +82,7 @@ class Publishing:
         media_ids: list[str] | None = None,
         visibility: str | None = None,
         first_comment: str | None = None,
-        scheduled_at: str | None = None,
+        scheduled_at: datetime | str | None = None,
         hidden: bool | None = None,
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
@@ -95,7 +96,7 @@ class Publishing:
             media_ids: New media file IDs.
             visibility: New visibility setting.
             first_comment: New first comment text.
-            scheduled_at: New scheduled publication time.
+            scheduled_at: New scheduled publication time (datetime or ISO 8601 string).
             hidden: Archive or unarchive the post.
             targets: Updated per-platform target configurations.
             timeout: Override the client-level timeout for this request.
@@ -120,7 +121,7 @@ class Publishing:
         if first_comment is not None:
             body["first_comment"] = first_comment
         if scheduled_at is not None:
-            body["scheduled_at"] = scheduled_at
+            body["scheduled_at"] = scheduled_at.isoformat() if isinstance(scheduled_at, datetime) else scheduled_at
         if hidden is not None:
             body["hidden"] = hidden
         if targets is not None:
@@ -131,11 +132,13 @@ class Publishing:
     def get_constraints(
         self,
         *,
+        platform: str | None = None,
         timeout: float | None = None,
     ) -> dict[str, PlatformConstraints]:
         """Get platform-specific content constraints.
 
         Args:
+            platform: Optional platform to filter constraints.
             timeout: Override the client-level timeout for this request.
 
         Returns:
@@ -144,7 +147,10 @@ class Publishing:
         Raises:
             AuthenticationError: If the API key is invalid.
         """
-        data = self._client._get("/v1/posts/validate", timeout=timeout)
+        params: dict[str, Any] = {}
+        if platform is not None:
+            params["platform"] = platform
+        data = self._client._get("/v1/posts/validate", params=params or None, timeout=timeout)
         raw: dict[str, Any] = data.get("data", data)
         return {k: PlatformConstraints.model_validate({**v, "platform": k}) for k, v in raw.items()}
 
@@ -155,7 +161,7 @@ class Publishing:
         platforms: list[str] | None = None,
         account_ids: list[str] | None = None,
         media_ids: list[str] | None = None,
-        scheduled_at: str | None = None,
+        scheduled_at: datetime | str | None = None,
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> ValidationResult:
@@ -166,7 +172,7 @@ class Publishing:
             platforms: Platform names to validate against.
             account_ids: Account IDs (resolved to platforms automatically).
             media_ids: Media file IDs to validate.
-            scheduled_at: Schedule time to validate.
+            scheduled_at: Schedule time to validate (datetime or ISO 8601 string).
             targets: Per-target overrides to validate.
             timeout: Override the client-level timeout for this request.
 
@@ -185,7 +191,7 @@ class Publishing:
         if media_ids is not None:
             body["media_ids"] = media_ids
         if scheduled_at is not None:
-            body["scheduled_at"] = scheduled_at
+            body["scheduled_at"] = scheduled_at.isoformat() if isinstance(scheduled_at, datetime) else scheduled_at
         if targets is not None:
             body["targets"] = targets
         data = self._client._post("/v1/posts/validate", json=body, timeout=timeout)
@@ -237,6 +243,33 @@ class Publishing:
         """
         self._client._post(f"/v1/media/{media_id}/verify", timeout=timeout)
 
+    def import_posts(
+        self,
+        *,
+        file: Any,
+        dry_run: bool = False,
+        timeout: float | None = None,
+    ) -> ImportPostsResponse:
+        """Import posts from a CSV file.
+
+        Args:
+            file: CSV file content.
+            dry_run: Validate only, do not create posts.
+            timeout: Override the client-level timeout for this request.
+
+        Returns:
+            Import results with created posts and any errors.
+
+        Raises:
+            BadRequestError: If the CSV is invalid.
+            AuthenticationError: If the API key is invalid.
+        """
+        params: dict[str, Any] = {}
+        if dry_run:
+            params["dry_run"] = "true"
+        data = self._client._post("/v1/posts/import", json={"file": "csv"}, params=params or None, timeout=timeout)
+        return ImportPostsResponse.model_validate(data)
+
 
 class AsyncPublishing:
     """Create, update, and validate posts for publishing (async)."""
@@ -254,7 +287,7 @@ class AsyncPublishing:
         media_ids: list[str] | None = None,
         visibility: str | None = None,
         first_comment: str | None = None,
-        scheduled_at: str | None = None,
+        scheduled_at: datetime | str | None = None,
         publish_now: bool = False,
         skip_duplicate_check: bool = False,
         targets: list[dict[str, Any]] | None = None,
@@ -268,7 +301,7 @@ class AsyncPublishing:
             media_ids: Previously uploaded media file IDs to attach.
             visibility: Who can see the post (``"public"``, ``"private"``, ``"connections_only"``).
             first_comment: Auto-posted as first comment after publishing.
-            scheduled_at: ISO 8601 datetime for scheduled publication.
+            scheduled_at: Datetime or ISO 8601 string for scheduled publication.
             publish_now: Immediately publish if targets are provided.
             skip_duplicate_check: Bypass duplicate content detection.
             targets: Per-platform target configurations.
@@ -291,7 +324,7 @@ class AsyncPublishing:
         if first_comment is not None:
             body["first_comment"] = first_comment
         if scheduled_at is not None:
-            body["scheduled_at"] = scheduled_at
+            body["scheduled_at"] = scheduled_at.isoformat() if isinstance(scheduled_at, datetime) else scheduled_at
         if publish_now:
             body["publish_now"] = True
         if skip_duplicate_check:
@@ -310,7 +343,7 @@ class AsyncPublishing:
         media_ids: list[str] | None = None,
         visibility: str | None = None,
         first_comment: str | None = None,
-        scheduled_at: str | None = None,
+        scheduled_at: datetime | str | None = None,
         hidden: bool | None = None,
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
@@ -324,7 +357,7 @@ class AsyncPublishing:
             media_ids: New media file IDs.
             visibility: New visibility setting.
             first_comment: New first comment text.
-            scheduled_at: New scheduled publication time.
+            scheduled_at: New scheduled publication time (datetime or ISO 8601 string).
             hidden: Archive or unarchive the post.
             targets: Updated per-platform target configurations.
             timeout: Override the client-level timeout for this request.
@@ -349,7 +382,7 @@ class AsyncPublishing:
         if first_comment is not None:
             body["first_comment"] = first_comment
         if scheduled_at is not None:
-            body["scheduled_at"] = scheduled_at
+            body["scheduled_at"] = scheduled_at.isoformat() if isinstance(scheduled_at, datetime) else scheduled_at
         if hidden is not None:
             body["hidden"] = hidden
         if targets is not None:
@@ -360,11 +393,13 @@ class AsyncPublishing:
     async def get_constraints(
         self,
         *,
+        platform: str | None = None,
         timeout: float | None = None,
     ) -> dict[str, PlatformConstraints]:
         """Get platform-specific content constraints.
 
         Args:
+            platform: Optional platform to filter constraints.
             timeout: Override the client-level timeout for this request.
 
         Returns:
@@ -373,7 +408,10 @@ class AsyncPublishing:
         Raises:
             AuthenticationError: If the API key is invalid.
         """
-        data = await self._client._get("/v1/posts/validate", timeout=timeout)
+        params: dict[str, Any] = {}
+        if platform is not None:
+            params["platform"] = platform
+        data = await self._client._get("/v1/posts/validate", params=params or None, timeout=timeout)
         raw: dict[str, Any] = data.get("data", data)
         return {k: PlatformConstraints.model_validate({**v, "platform": k}) for k, v in raw.items()}
 
@@ -384,7 +422,7 @@ class AsyncPublishing:
         platforms: list[str] | None = None,
         account_ids: list[str] | None = None,
         media_ids: list[str] | None = None,
-        scheduled_at: str | None = None,
+        scheduled_at: datetime | str | None = None,
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> ValidationResult:
@@ -395,7 +433,7 @@ class AsyncPublishing:
             platforms: Platform names to validate against.
             account_ids: Account IDs (resolved to platforms automatically).
             media_ids: Media file IDs to validate.
-            scheduled_at: Schedule time to validate.
+            scheduled_at: Schedule time to validate (datetime or ISO 8601 string).
             targets: Per-target overrides to validate.
             timeout: Override the client-level timeout for this request.
 
@@ -414,7 +452,7 @@ class AsyncPublishing:
         if media_ids is not None:
             body["media_ids"] = media_ids
         if scheduled_at is not None:
-            body["scheduled_at"] = scheduled_at
+            body["scheduled_at"] = scheduled_at.isoformat() if isinstance(scheduled_at, datetime) else scheduled_at
         if targets is not None:
             body["targets"] = targets
         data = await self._client._post("/v1/posts/validate", json=body, timeout=timeout)
@@ -465,3 +503,32 @@ class AsyncPublishing:
             AuthenticationError: If the API key is invalid.
         """
         await self._client._post(f"/v1/media/{media_id}/verify", timeout=timeout)
+
+    async def import_posts(
+        self,
+        *,
+        file: Any,
+        dry_run: bool = False,
+        timeout: float | None = None,
+    ) -> ImportPostsResponse:
+        """Import posts from a CSV file.
+
+        Args:
+            file: CSV file content.
+            dry_run: Validate only, do not create posts.
+            timeout: Override the client-level timeout for this request.
+
+        Returns:
+            Import results with created posts and any errors.
+
+        Raises:
+            BadRequestError: If the CSV is invalid.
+            AuthenticationError: If the API key is invalid.
+        """
+        params: dict[str, Any] = {}
+        if dry_run:
+            params["dry_run"] = "true"
+        data = await self._client._post(
+            "/v1/posts/import", json={"file": "csv"}, params=params or None, timeout=timeout
+        )
+        return ImportPostsResponse.model_validate(data)

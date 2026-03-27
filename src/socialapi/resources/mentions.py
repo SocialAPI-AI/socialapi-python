@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from socialapi.models.mentions import Mention
@@ -21,7 +22,7 @@ class Mentions:
         self,
         account_id: str,
         *,
-        since: str | None = None,
+        since: datetime | str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
@@ -30,7 +31,7 @@ class Mentions:
 
         Args:
             account_id: The connected account ID.
-            since: Only return mentions after this ISO 8601 datetime.
+            since: Only return mentions after this datetime or ISO 8601 string.
             limit: Maximum number of results.
             cursor: Pagination cursor from a previous response.
             timeout: Override the client-level timeout for this request.
@@ -45,7 +46,7 @@ class Mentions:
         """
         params: dict[str, Any] = {}
         if since is not None:
-            params["since"] = since
+            params["since"] = since.isoformat() if isinstance(since, datetime) else since
         if limit is not None:
             params["limit"] = limit
         if cursor is not None:
@@ -70,7 +71,7 @@ class AsyncMentions:
         self,
         account_id: str,
         *,
-        since: str | None = None,
+        since: datetime | str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
@@ -79,7 +80,7 @@ class AsyncMentions:
 
         Args:
             account_id: The connected account ID.
-            since: Only return mentions after this ISO 8601 datetime.
+            since: Only return mentions after this datetime or ISO 8601 string.
             limit: Maximum number of results.
             cursor: Pagination cursor from a previous response.
             timeout: Override the client-level timeout for this request.
@@ -94,7 +95,7 @@ class AsyncMentions:
         """
         params: dict[str, Any] = {}
         if since is not None:
-            params["since"] = since
+            params["since"] = since.isoformat() if isinstance(since, datetime) else since
         if limit is not None:
             params["limit"] = limit
         if cursor is not None:

@@ -61,7 +61,12 @@ class APIStatusError(SocialAPIError):
         except Exception:
             pass
 
-        error_class = _STATUS_CODE_MAP.get(response.status_code, APIStatusError)
+        # Try code-specific mapping first, then status code mapping
+        error_class: type[APIStatusError] | None = None
+        if code is not None:
+            error_class = _ERROR_CODE_MAP.get(code)
+        if error_class is None:
+            error_class = _STATUS_CODE_MAP.get(response.status_code, APIStatusError)
         return error_class(
             message,
             status_code=response.status_code,
@@ -75,35 +80,67 @@ class APIStatusError(SocialAPIError):
 
 
 class BadRequestError(APIStatusError):
-    """400 Bad Request — invalid parameters, missing metadata, or unsupported platform."""
+    """400 Bad Request -- invalid parameters, missing metadata, or unsupported platform."""
+
+
+class UnsupportedPlatformError(BadRequestError):
+    """400 Bad Request -- unsupported platform."""
+
+
+class MissingMetadataError(BadRequestError):
+    """400 Bad Request -- missing required metadata."""
 
 
 class AuthenticationError(APIStatusError):
-    """401 Unauthorized — invalid API key, expired token, or missing credentials."""
+    """401 Unauthorized -- invalid API key, expired token, or missing credentials."""
+
+
+class InvalidTokenError(AuthenticationError):
+    """401 Unauthorized -- invalid token."""
+
+
+class InvalidCredentialsError(AuthenticationError):
+    """401 Unauthorized -- invalid credentials."""
+
+
+class ForbiddenError(APIStatusError):
+    """403 Forbidden -- access denied (e.g. brand limit reached)."""
 
 
 class NotFoundError(APIStatusError):
-    """404 Not Found — the requested resource does not exist."""
+    """404 Not Found -- the requested resource does not exist."""
+
+
+class AccountNotFoundError(NotFoundError):
+    """404 Not Found -- the connected account does not exist."""
 
 
 class ConflictError(APIStatusError):
-    """409 Conflict — e.g. account already linked."""
+    """409 Conflict -- e.g. account already linked."""
+
+
+class AccountAlreadyLinkedError(ConflictError):
+    """409 Conflict -- account is already linked."""
 
 
 class StorageQuotaExceededError(APIStatusError):
-    """413 Payload Too Large — storage quota exceeded."""
+    """413 Payload Too Large -- storage quota exceeded."""
 
 
 class RateLimitError(APIStatusError):
-    """429 Too Many Requests — API or platform rate limit exceeded."""
+    """429 Too Many Requests -- API or platform rate limit exceeded."""
+
+
+class PlatformRateLimitError(RateLimitError):
+    """429 Too Many Requests -- platform-specific rate limit exceeded."""
 
 
 class InternalServerError(APIStatusError):
-    """500 Internal Server Error — unexpected server failure."""
+    """500 Internal Server Error -- unexpected server failure."""
 
 
 class NotSupportedError(APIStatusError):
-    """501 Not Implemented — the platform does not support this operation."""
+    """501 Not Implemented -- the platform does not support this operation."""
 
 
 class APIConnectionError(SocialAPIError):
@@ -131,10 +168,25 @@ class APITimeoutError(APIConnectionError):
 _STATUS_CODE_MAP: dict[int, type[APIStatusError]] = {
     400: BadRequestError,
     401: AuthenticationError,
+    403: ForbiddenError,
     404: NotFoundError,
     409: ConflictError,
     413: StorageQuotaExceededError,
     429: RateLimitError,
     500: InternalServerError,
     501: NotSupportedError,
+}
+
+# ---------------------------------------------------------------------------
+# Internal mapping: error code -> exception class (more specific)
+# ---------------------------------------------------------------------------
+
+_ERROR_CODE_MAP: dict[str, type[APIStatusError]] = {
+    "unsupported_platform": UnsupportedPlatformError,
+    "missing_metadata": MissingMetadataError,
+    "invalid_token": InvalidTokenError,
+    "invalid_credentials": InvalidCredentialsError,
+    "account_not_found": AccountNotFoundError,
+    "account_already_linked": AccountAlreadyLinkedError,
+    "platform_rate_limit": PlatformRateLimitError,
 }

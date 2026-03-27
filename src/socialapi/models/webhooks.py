@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -12,7 +14,7 @@ class Webhook(BaseModel):
     url: str
     events: list[str]
     is_active: bool = True
-    created_at: str
+    created_at: datetime
 
 
 class CreateWebhookRequest(BaseModel):

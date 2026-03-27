@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
@@ -39,12 +40,12 @@ class PostTarget(BaseModel):
     title: str | None = None
     first_comment: str | None = None
     visibility: str | None = None
-    scheduled_at: str | None = None
+    scheduled_at: datetime | None = None
     platform_post_id: str | None = None
     permalink: str | None = None
-    published_at: str | None = None
+    published_at: datetime | None = None
     metrics: PostTargetMetrics | None = None
-    metrics_synced_at: str | None = None
+    metrics_synced_at: datetime | None = None
     error: PostTargetError | None = None
 
 
@@ -59,12 +60,12 @@ class Post(BaseModel):
     status: str
     visibility: str | None = None
     media_ids: list[str] | None = None
-    scheduled_at: str | None = None
-    published_at: str | None = None
+    scheduled_at: datetime | None = None
+    published_at: datetime | None = None
     hidden: bool = False
     retry_count: int = 0
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
     targets: list[PostTarget] | None = None
 
 

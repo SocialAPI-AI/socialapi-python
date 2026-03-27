@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -12,8 +14,8 @@ class APIKey(BaseModel):
     name: str
     preview: str
     is_active: bool
-    last_used_at: str | None = None
-    created_at: str
+    last_used_at: datetime | None = None
+    created_at: datetime
 
 
 class CreateKeyRequest(BaseModel):
