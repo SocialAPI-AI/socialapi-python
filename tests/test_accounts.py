@@ -205,3 +205,107 @@ async def test_disconnect_account_async(httpx_mock, async_client) -> None:
         status_code=204,
     )
     await async_client.accounts.disconnect("acc_ig_001")
+
+
+# ---------------------------------------------------------------------------
+# New endpoints from OpenAPI sync
+# ---------------------------------------------------------------------------
+
+
+def test_get_creator_info(httpx_mock, client) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_tiktok_001/creator-info",
+        json={
+            "platform": "tiktok",
+            "nickname": "creator",
+            "can_post": True,
+            "max_video_duration_sec": 60,
+            "privacy_level_options": ["PUBLIC_TO_EVERYONE"],
+            "interaction_settings": {
+                "comment_disabled": False,
+                "duet_disabled": False,
+                "stitch_disabled": False,
+            },
+        },
+    )
+    info = client.accounts.get_creator_info("acc_tiktok_001")
+    assert info.platform == "tiktok"
+    assert info.can_post is True
+    assert info.interaction_settings is not None
+    assert info.interaction_settings.comment_disabled is False
+
+
+def test_list_pages(httpx_mock, client) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_fb_001/pages",
+        json={
+            "data": [
+                {"id": "pg_001", "name": "Page A", "is_default": True, "is_active": True},
+                {"id": "pg_002", "name": "Page B", "is_default": False, "is_active": True},
+            ]
+        },
+    )
+    pages = client.accounts.list_pages("acc_fb_001")
+    assert len(pages) == 2
+    assert pages[0].id == "pg_001"
+    assert pages[0].is_default is True
+
+
+def test_update_page(httpx_mock, client) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_fb_001/pages/pg_001",
+        method="PATCH",
+        json={"id": "pg_001", "name": "Page A", "is_default": False, "is_active": True},
+    )
+    page = client.accounts.update_page("acc_fb_001", "pg_001", is_default=False)
+    assert page.is_default is False
+
+
+def test_export_account(httpx_mock, client) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_001/export",
+        method="POST",
+        status_code=202,
+        json={"id": "exp_001", "status": "pending"},
+    )
+    export = client.accounts.export("acc_001", include_transcript=True)
+    assert export.id == "exp_001"
+    assert export.status == "pending"
+
+
+def test_get_limits_account(httpx_mock, client) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_001/limits",
+        json={"posts_remaining": 25},
+    )
+    limits = client.accounts.get_limits("acc_001")
+    assert limits.limits == {"posts_remaining": 25}
+
+
+async def test_get_creator_info_async(httpx_mock, async_client) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_t_001/creator-info",
+        json={"platform": "tiktok", "can_post": True},
+    )
+    info = await async_client.accounts.get_creator_info("acc_t_001")
+    assert info.can_post is True
+
+
+async def test_list_pages_async(httpx_mock, async_client) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_fb_001/pages",
+        json={"data": [{"id": "pg_001", "name": "Page A", "is_default": True}]},
+    )
+    pages = await async_client.accounts.list_pages("acc_fb_001")
+    assert len(pages) == 1
+
+
+async def test_export_account_async(httpx_mock, async_client) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_001/export",
+        method="POST",
+        status_code=202,
+        json={"id": "exp_001", "status": "pending"},
+    )
+    export = await async_client.accounts.export("acc_001")
+    assert export.id == "exp_001"

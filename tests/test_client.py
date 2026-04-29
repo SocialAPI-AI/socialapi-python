@@ -55,11 +55,15 @@ def test_client_has_all_resources() -> None:
     c = SocialAPI(api_key=TEST_API_KEY)
     resource_names = [
         "accounts",
+        "brands",
         "comments",
         "conversations",
-        "feedback",
+        "exports",
+        "invites",
         "keys",
+        "media",
         "mentions",
+        "oauth",
         "posts",
         "publishing",
         "reviews",
