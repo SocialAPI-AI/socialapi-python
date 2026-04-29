@@ -4,12 +4,23 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
+from socialapi._bound import _Bound
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from socialapi._base_client import BaseAsyncClient, BaseSyncClient
 
 T = TypeVar("T", bound=BaseModel)
+
+
+def _rebind_items(items: list[Any], client: Any, ctx: dict[str, Any] | None) -> None:
+    """Attach client + ctx to every item that subclasses ``_Bound``."""
+    if not items:
+        return
+    for item in items:
+        if isinstance(item, _Bound):
+            item._bind(client, ctx)
 
 
 class CursorPage(Generic[T]):
@@ -38,6 +49,7 @@ class CursorPage(Generic[T]):
     _path: str
     _params: dict[str, Any]
     _model: type[T]
+    _bind_ctx: dict[str, Any] | None
 
     def __init__(
         self,
@@ -49,6 +61,7 @@ class CursorPage(Generic[T]):
         path: str,
         params: dict[str, Any],
         model: type[T],
+        bind_ctx: dict[str, Any] | None = None,
     ) -> None:
         self.data = data
         self.has_more = has_more
@@ -57,6 +70,8 @@ class CursorPage(Generic[T]):
         self._path = path
         self._params = params
         self._model = model
+        self._bind_ctx = bind_ctx
+        _rebind_items(list(self.data), client, bind_ctx)
 
     def has_next_page(self) -> bool:
         """Return ``True`` if more pages are available."""
@@ -78,6 +93,7 @@ class CursorPage(Generic[T]):
             self._path,
             params=params,
             model=self._model,
+            bind_ctx=self._bind_ctx,
         )
 
     def __iter__(self) -> Iterator[T]:
@@ -125,6 +141,7 @@ class AsyncCursorPage(Generic[T]):
     _path: str
     _params: dict[str, Any]
     _model: type[T]
+    _bind_ctx: dict[str, Any] | None
 
     # Internal state for __aiter__ / __anext__
     _current_index: int
@@ -140,6 +157,7 @@ class AsyncCursorPage(Generic[T]):
         path: str,
         params: dict[str, Any],
         model: type[T],
+        bind_ctx: dict[str, Any] | None = None,
     ) -> None:
         self.data = data
         self.has_more = has_more
@@ -148,8 +166,10 @@ class AsyncCursorPage(Generic[T]):
         self._path = path
         self._params = params
         self._model = model
+        self._bind_ctx = bind_ctx
         self._current_index = 0
         self._exhausted = False
+        _rebind_items(list(self.data), client, bind_ctx)
 
     def has_next_page(self) -> bool:
         """Return ``True`` if more pages are available."""
@@ -171,6 +191,7 @@ class AsyncCursorPage(Generic[T]):
             self._path,
             params=params,
             model=self._model,
+            bind_ctx=self._bind_ctx,
         )
 
     def __aiter__(self) -> AsyncCursorPage[T]:

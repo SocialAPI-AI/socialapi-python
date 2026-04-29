@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from socialapi.models.reviews import ReplyToReviewResponse, Review
+from socialapi.models.reviews import AsyncReview, ReplyToReviewResponse, Review
 
 if TYPE_CHECKING:
     from socialapi._base_client import BaseAsyncClient, BaseSyncClient
@@ -28,26 +28,6 @@ class Reviews:
         cursor: str | None = None,
         timeout: float | None = None,
     ) -> CursorPage[Review]:
-        """List reviews across connected accounts.
-
-        Reviews are proxied in real-time from platforms and not stored.
-        Currently only Google Business Profile returns reviews.
-
-        Args:
-            account_id: Filter by connected account.
-            platform: Filter by platform.
-            since: Only return reviews after this datetime or ISO 8601 string.
-            limit: Maximum number of results.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of reviews.
-
-        Raises:
-            AuthenticationError: If the API key is invalid.
-            NotSupportedError: If the platform does not support reviews.
-        """
         params: dict[str, Any] = {}
         if account_id is not None:
             params["account_id"] = account_id
@@ -74,22 +54,6 @@ class Reviews:
         text: str,
         timeout: float | None = None,
     ) -> ReplyToReviewResponse:
-        """Reply to a review.
-
-        Args:
-            review_id: The review ID to reply to.
-            account_id: The connected account ID.
-            text: Reply text content.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The reply result.
-
-        Raises:
-            NotFoundError: If the review does not exist.
-            NotSupportedError: If the platform does not support review replies.
-            AuthenticationError: If the API key is invalid.
-        """
         body: dict[str, Any] = {"account_id": account_id, "text": text}
         data = self._client._post(f"/v1/inbox/reviews/{review_id}/reply", json=body, timeout=timeout)
         return ReplyToReviewResponse.model_validate(data)
@@ -102,22 +66,6 @@ class Reviews:
         text: str,
         timeout: float | None = None,
     ) -> ReplyToReviewResponse:
-        """Update an existing review reply.
-
-        Args:
-            review_id: The review ID.
-            account_id: The connected account ID.
-            text: Updated reply text content.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The updated reply result.
-
-        Raises:
-            NotFoundError: If the review does not exist.
-            NotSupportedError: If the platform does not support reply updates.
-            AuthenticationError: If the API key is invalid.
-        """
         body: dict[str, Any] = {"account_id": account_id, "text": text}
         data = self._client._put(f"/v1/inbox/reviews/{review_id}/reply", json=body, timeout=timeout)
         return ReplyToReviewResponse.model_validate(data)
@@ -129,18 +77,6 @@ class Reviews:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Delete a review reply.
-
-        Args:
-            review_id: The review ID whose reply to delete.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the review does not exist.
-            NotSupportedError: If the platform does not support reply deletion.
-            AuthenticationError: If the API key is invalid.
-        """
         self._client._delete(
             f"/v1/inbox/reviews/{review_id}/reply",
             params={"account_id": account_id},
@@ -165,27 +101,7 @@ class AsyncReviews:
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
-    ) -> AsyncCursorPage[Review]:
-        """List reviews across connected accounts.
-
-        Reviews are proxied in real-time from platforms and not stored.
-        Currently only Google Business Profile returns reviews.
-
-        Args:
-            account_id: Filter by connected account.
-            platform: Filter by platform.
-            since: Only return reviews after this datetime or ISO 8601 string.
-            limit: Maximum number of results.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of reviews.
-
-        Raises:
-            AuthenticationError: If the API key is invalid.
-            NotSupportedError: If the platform does not support reviews.
-        """
+    ) -> AsyncCursorPage[AsyncReview]:
         params: dict[str, Any] = {}
         if account_id is not None:
             params["account_id"] = account_id
@@ -200,7 +116,7 @@ class AsyncReviews:
         return await self._client._get_paginated(
             "/v1/inbox/reviews",
             params=params,
-            model=Review,
+            model=AsyncReview,
             timeout=timeout,
         )
 
@@ -212,22 +128,6 @@ class AsyncReviews:
         text: str,
         timeout: float | None = None,
     ) -> ReplyToReviewResponse:
-        """Reply to a review.
-
-        Args:
-            review_id: The review ID to reply to.
-            account_id: The connected account ID.
-            text: Reply text content.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The reply result.
-
-        Raises:
-            NotFoundError: If the review does not exist.
-            NotSupportedError: If the platform does not support review replies.
-            AuthenticationError: If the API key is invalid.
-        """
         body: dict[str, Any] = {"account_id": account_id, "text": text}
         data = await self._client._post(f"/v1/inbox/reviews/{review_id}/reply", json=body, timeout=timeout)
         return ReplyToReviewResponse.model_validate(data)
@@ -240,22 +140,6 @@ class AsyncReviews:
         text: str,
         timeout: float | None = None,
     ) -> ReplyToReviewResponse:
-        """Update an existing review reply.
-
-        Args:
-            review_id: The review ID.
-            account_id: The connected account ID.
-            text: Updated reply text content.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The updated reply result.
-
-        Raises:
-            NotFoundError: If the review does not exist.
-            NotSupportedError: If the platform does not support reply updates.
-            AuthenticationError: If the API key is invalid.
-        """
         body: dict[str, Any] = {"account_id": account_id, "text": text}
         data = await self._client._put(f"/v1/inbox/reviews/{review_id}/reply", json=body, timeout=timeout)
         return ReplyToReviewResponse.model_validate(data)
@@ -267,18 +151,6 @@ class AsyncReviews:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Delete a review reply.
-
-        Args:
-            review_id: The review ID whose reply to delete.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the review does not exist.
-            NotSupportedError: If the platform does not support reply deletion.
-            AuthenticationError: If the API key is invalid.
-        """
         await self._client._delete(
             f"/v1/inbox/reviews/{review_id}/reply",
             params={"account_id": account_id},

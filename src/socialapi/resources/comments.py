@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from socialapi.models.comments import (
+    AsyncCommentedPost,
+    AsyncInboxComment,
     CommentedPost,
     InboxComment,
     ReplyToCommentResponse,
@@ -27,35 +29,27 @@ class Comments:
         *,
         account_id: str | None = None,
         platform: str | None = None,
+        min_comments: int | None = None,
         since: datetime | str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
     ) -> CursorPage[CommentedPost]:
-        """List posts that have received comments.
-
-        Args:
-            account_id: Filter by connected account.
-            platform: Filter by platform.
-            since: Only posts commented after this datetime or ISO 8601 string.
-            limit: Maximum number of results per page.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of commented posts.
-
-        Raises:
-            AuthenticationError: If the API key is invalid.
-            BadRequestError: If query parameters are invalid.
-        """
         params: dict[str, Any] = {}
         if account_id is not None:
             params["account_id"] = account_id
         if platform is not None:
             params["platform"] = platform
+        if min_comments is not None:
+            params["min_comments"] = min_comments
         if since is not None:
             params["since"] = since.isoformat() if isinstance(since, datetime) else since
+        if sort_by is not None:
+            params["sort_by"] = sort_by
+        if sort_order is not None:
+            params["sort_order"] = sort_order
         if limit is not None:
             params["limit"] = limit
         if cursor is not None:
@@ -76,22 +70,6 @@ class Comments:
         cursor: str | None = None,
         timeout: float | None = None,
     ) -> CursorPage[InboxComment]:
-        """List comments on a specific post.
-
-        Args:
-            inbox_post_id: The inbox post ID.
-            account_id: The connected account ID that owns this post.
-            limit: Maximum number of results per page.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of comments.
-
-        Raises:
-            NotFoundError: If the post does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
         params: dict[str, Any] = {"account_id": account_id}
         if limit is not None:
             params["limit"] = limit
@@ -102,6 +80,31 @@ class Comments:
             params=params,
             model=InboxComment,
             timeout=timeout,
+            bind_ctx={"account_id": account_id, "inbox_post_id": inbox_post_id},
+        )
+
+    def list_replies(
+        self,
+        post_id: str,
+        comment_id: str,
+        *,
+        account_id: str,
+        limit: int | None = None,
+        cursor: str | None = None,
+        timeout: float | None = None,
+    ) -> CursorPage[InboxComment]:
+        """List replies to a comment."""
+        params: dict[str, Any] = {"account_id": account_id}
+        if limit is not None:
+            params["limit"] = limit
+        if cursor is not None:
+            params["cursor"] = cursor
+        return self._client._get_paginated(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/replies",
+            params=params,
+            model=InboxComment,
+            timeout=timeout,
+            bind_ctx={"account_id": account_id, "inbox_post_id": post_id},
         )
 
     def reply(
@@ -113,22 +116,6 @@ class Comments:
         comment_id: str | None = None,
         timeout: float | None = None,
     ) -> ReplyToCommentResponse:
-        """Reply to a comment or post.
-
-        Args:
-            post_id: The inbox post ID.
-            account_id: The connected account ID.
-            text: Reply text content.
-            comment_id: Optional parent comment ID for threaded replies.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The reply result with the new comment ID.
-
-        Raises:
-            NotFoundError: If the post does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
         body: dict[str, Any] = {"account_id": account_id, "text": text}
         if comment_id is not None:
             body["comment_id"] = comment_id
@@ -143,18 +130,6 @@ class Comments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Delete a comment.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to delete.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
         self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}",
             params={"account_id": account_id},
@@ -169,18 +144,6 @@ class Comments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Hide a comment from public view.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to hide.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support hiding.
-        """
         self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/hide",
             json={"account_id": account_id},
@@ -195,18 +158,6 @@ class Comments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Unhide a previously hidden comment.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to unhide.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support hiding.
-        """
         self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/hide",
             params={"account_id": account_id},
@@ -221,18 +172,6 @@ class Comments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Like a comment.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to like.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support liking.
-        """
         self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like",
             json={"account_id": account_id},
@@ -247,18 +186,6 @@ class Comments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Remove a like from a comment.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to unlike.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support liking.
-        """
         self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like",
             params={"account_id": account_id},
@@ -274,19 +201,6 @@ class Comments:
         text: str,
         timeout: float | None = None,
     ) -> None:
-        """Send a private reply to a comment author.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to privately reply to.
-            account_id: The connected account ID.
-            text: Private message text.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support private replies.
-        """
         self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply",
             json={"account_id": account_id, "text": text},
@@ -307,35 +221,27 @@ class AsyncComments:
         *,
         account_id: str | None = None,
         platform: str | None = None,
+        min_comments: int | None = None,
         since: datetime | str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
-    ) -> AsyncCursorPage[CommentedPost]:
-        """List posts that have received comments.
-
-        Args:
-            account_id: Filter by connected account.
-            platform: Filter by platform.
-            since: Only posts commented after this datetime or ISO 8601 string.
-            limit: Maximum number of results per page.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of commented posts.
-
-        Raises:
-            AuthenticationError: If the API key is invalid.
-            BadRequestError: If query parameters are invalid.
-        """
+    ) -> AsyncCursorPage[AsyncCommentedPost]:
         params: dict[str, Any] = {}
         if account_id is not None:
             params["account_id"] = account_id
         if platform is not None:
             params["platform"] = platform
+        if min_comments is not None:
+            params["min_comments"] = min_comments
         if since is not None:
             params["since"] = since.isoformat() if isinstance(since, datetime) else since
+        if sort_by is not None:
+            params["sort_by"] = sort_by
+        if sort_order is not None:
+            params["sort_order"] = sort_order
         if limit is not None:
             params["limit"] = limit
         if cursor is not None:
@@ -343,7 +249,7 @@ class AsyncComments:
         return await self._client._get_paginated(
             "/v1/inbox/comments",
             params=params,
-            model=CommentedPost,
+            model=AsyncCommentedPost,
             timeout=timeout,
         )
 
@@ -355,23 +261,7 @@ class AsyncComments:
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
-    ) -> AsyncCursorPage[InboxComment]:
-        """List comments on a specific post.
-
-        Args:
-            inbox_post_id: The inbox post ID.
-            account_id: The connected account ID that owns this post.
-            limit: Maximum number of results per page.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of comments.
-
-        Raises:
-            NotFoundError: If the post does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
+    ) -> AsyncCursorPage[AsyncInboxComment]:
         params: dict[str, Any] = {"account_id": account_id}
         if limit is not None:
             params["limit"] = limit
@@ -380,8 +270,32 @@ class AsyncComments:
         return await self._client._get_paginated(
             f"/v1/inbox/comments/{inbox_post_id}",
             params=params,
-            model=InboxComment,
+            model=AsyncInboxComment,
             timeout=timeout,
+            bind_ctx={"account_id": account_id, "inbox_post_id": inbox_post_id},
+        )
+
+    async def list_replies(
+        self,
+        post_id: str,
+        comment_id: str,
+        *,
+        account_id: str,
+        limit: int | None = None,
+        cursor: str | None = None,
+        timeout: float | None = None,
+    ) -> AsyncCursorPage[AsyncInboxComment]:
+        params: dict[str, Any] = {"account_id": account_id}
+        if limit is not None:
+            params["limit"] = limit
+        if cursor is not None:
+            params["cursor"] = cursor
+        return await self._client._get_paginated(
+            f"/v1/inbox/comments/{post_id}/{comment_id}/replies",
+            params=params,
+            model=AsyncInboxComment,
+            timeout=timeout,
+            bind_ctx={"account_id": account_id, "inbox_post_id": post_id},
         )
 
     async def reply(
@@ -393,22 +307,6 @@ class AsyncComments:
         comment_id: str | None = None,
         timeout: float | None = None,
     ) -> ReplyToCommentResponse:
-        """Reply to a comment or post.
-
-        Args:
-            post_id: The inbox post ID.
-            account_id: The connected account ID.
-            text: Reply text content.
-            comment_id: Optional parent comment ID for threaded replies.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The reply result with the new comment ID.
-
-        Raises:
-            NotFoundError: If the post does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
         body: dict[str, Any] = {"account_id": account_id, "text": text}
         if comment_id is not None:
             body["comment_id"] = comment_id
@@ -423,18 +321,6 @@ class AsyncComments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Delete a comment.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to delete.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
         await self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}",
             params={"account_id": account_id},
@@ -449,18 +335,6 @@ class AsyncComments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Hide a comment from public view.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to hide.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support hiding.
-        """
         await self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/hide",
             json={"account_id": account_id},
@@ -475,18 +349,6 @@ class AsyncComments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Unhide a previously hidden comment.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to unhide.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support hiding.
-        """
         await self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/hide",
             params={"account_id": account_id},
@@ -501,18 +363,6 @@ class AsyncComments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Like a comment.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to like.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support liking.
-        """
         await self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like",
             json={"account_id": account_id},
@@ -527,18 +377,6 @@ class AsyncComments:
         account_id: str,
         timeout: float | None = None,
     ) -> None:
-        """Remove a like from a comment.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to unlike.
-            account_id: The connected account ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support liking.
-        """
         await self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like",
             params={"account_id": account_id},
@@ -554,19 +392,6 @@ class AsyncComments:
         text: str,
         timeout: float | None = None,
     ) -> None:
-        """Send a private reply to a comment author.
-
-        Args:
-            post_id: The inbox post ID.
-            comment_id: The comment ID to privately reply to.
-            account_id: The connected account ID.
-            text: Private message text.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the comment does not exist.
-            NotSupportedError: If the platform does not support private replies.
-        """
         await self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply",
             json={"account_id": account_id, "text": text},

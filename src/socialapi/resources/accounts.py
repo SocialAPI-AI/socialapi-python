@@ -4,10 +4,16 @@ from typing import TYPE_CHECKING, Any
 
 from socialapi.models.accounts import (
     Account,
+    AsyncAccount,
+    AsyncPage,
     ConnectAccountResponse,
     ConnectOAuthResponse,
+    CreatorInfo,
     OAuthExchangeResponse,
+    Page,
 )
+from socialapi.models.exports import AsyncExport, Export
+from socialapi.models.usage import AccountLimits
 
 if TYPE_CHECKING:
     from socialapi._base_client import BaseAsyncClient, BaseSyncClient
@@ -28,18 +34,7 @@ class Accounts:
         brand_id: str | None = None,
         timeout: float | None = None,
     ) -> CursorPage[Account]:
-        """List all connected social media accounts.
-
-        Args:
-            brand_id: Optional brand ID to filter accounts by.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of connected accounts.
-
-        Raises:
-            AuthenticationError: If the API key is invalid.
-        """
+        """List all connected social media accounts."""
         params: dict[str, Any] = {}
         if brand_id is not None:
             params["brand_id"] = brand_id
@@ -58,33 +53,13 @@ class Accounts:
         metadata: dict[str, Any] | None = None,
         timeout: float | None = None,
     ) -> ConnectAccountResponse | ConnectOAuthResponse:
-        """Initiate a new account connection.
-
-        For OAuth2 platforms (instagram, facebook, etc.) this returns a
-        ``ConnectOAuthResponse`` with an ``auth_url`` to redirect the user.
-        For direct-auth platforms it returns a ``ConnectAccountResponse``
-        with the new account details.
-
-        Args:
-            platform: Social platform identifier (e.g. ``"instagram"``).
-            brand_id: Optional brand to attach the account to.
-            metadata: Platform-specific connection data (e.g. ``redirect_uri``).
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A direct connection response or an OAuth redirect response.
-
-        Raises:
-            BadRequestError: If the platform is unsupported or metadata is missing.
-            AuthenticationError: If the API key is invalid.
-        """
+        """Initiate a new account connection."""
         body: dict[str, Any] = {"platform": platform}
         if brand_id is not None:
             body["brand_id"] = brand_id
         if metadata is not None:
             body["metadata"] = metadata
         data = self._client._post("/v1/accounts/connect", json=body, timeout=timeout)
-        # OAuth flow returns auth_url; direct returns account_id
         if isinstance(data, dict) and "auth_url" in data:
             return ConnectOAuthResponse.model_validate(data)
         return ConnectAccountResponse.model_validate(data)
@@ -97,52 +72,89 @@ class Accounts:
         metadata: dict[str, Any],
         timeout: float | None = None,
     ) -> OAuthExchangeResponse:
-        """Exchange an OAuth authorization code for account credentials.
-
-        Args:
-            platform: Social platform identifier.
-            code: Authorization code from the platform callback.
-            metadata: Must include ``redirect_uri`` and ``state``.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The exchange result with connected account details.
-
-        Raises:
-            BadRequestError: If the code or metadata is invalid.
-            AuthenticationError: If the API key is invalid.
-        """
-        body: dict[str, Any] = {
-            "platform": platform,
-            "code": code,
-            "metadata": metadata,
-        }
+        """Exchange an OAuth authorization code for account credentials."""
+        body: dict[str, Any] = {"platform": platform, "code": code, "metadata": metadata}
         data = self._client._post("/v1/oauth/exchange", json=body, timeout=timeout)
-        # Single account: flat response; multiple: wrapped in data/count
         if isinstance(data, dict) and "data" in data:
             accounts = [ConnectAccountResponse.model_validate(a) for a in data["data"]]
             return OAuthExchangeResponse(accounts=accounts)
-        # Single account response (backward compat)
         account = ConnectAccountResponse.model_validate(data)
         return OAuthExchangeResponse(accounts=[account])
 
-    def disconnect(
+    def disconnect(self, account_id: str, *, timeout: float | None = None) -> None:
+        """Disconnect a connected account."""
+        self._client._delete(f"/v1/accounts/{account_id}", timeout=timeout)
+
+    def get_creator_info(self, account_id: str, *, timeout: float | None = None) -> CreatorInfo:
+        """Get platform-specific creator settings (TikTok only)."""
+        data = self._client._get(f"/v1/accounts/{account_id}/creator-info", timeout=timeout)
+        return CreatorInfo.model_validate(data)
+
+    def list_pages(self, account_id: str, *, timeout: float | None = None) -> list[Page]:
+        """List pages associated with this connected account."""
+        data = self._client._get(f"/v1/accounts/{account_id}/pages", timeout=timeout)
+        raw_items: list[Any] = data.get("data", [])
+        items = [Page.model_validate(item) for item in raw_items]
+        for item in items:
+            item._bind(self._client, {"account_id": account_id})
+        return items
+
+    def update_page(
+        self,
+        account_id: str,
+        page_id: str,
+        *,
+        is_default: bool | None = None,
+        is_active: bool | None = None,
+        timeout: float | None = None,
+    ) -> Page:
+        """Update a page's is_default or is_active status."""
+        body: dict[str, Any] = {}
+        if is_default is not None:
+            body["is_default"] = is_default
+        if is_active is not None:
+            body["is_active"] = is_active
+        data = self._client._patch(
+            f"/v1/accounts/{account_id}/pages/{page_id}",
+            json=body,
+            timeout=timeout,
+        )
+        page = Page.model_validate(data or {})
+        page._bind(self._client, {"account_id": account_id, "page_id": page_id})
+        return page
+
+    def export(
         self,
         account_id: str,
         *,
+        include_transcript: bool | None = None,
+        include_vision: bool | None = None,
         timeout: float | None = None,
-    ) -> None:
-        """Disconnect (delete) a connected account.
+    ) -> Export:
+        """Enqueue an analytics export job for an account."""
+        body: dict[str, Any] = {}
+        if include_transcript is not None:
+            body["include_transcript"] = include_transcript
+        if include_vision is not None:
+            body["include_vision"] = include_vision
+        data = self._client._post(
+            f"/v1/accounts/{account_id}/export",
+            json=body or None,
+            timeout=timeout,
+        )
+        export = Export.model_validate(data or {})
+        if export.id is not None:
+            export._bind(self._client, {"export_id": export.id, "account_id": account_id})
+        else:
+            export._bind(self._client, {"account_id": account_id})
+        return export
 
-        Args:
-            account_id: The account ID to disconnect.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the account does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
-        self._client._delete(f"/v1/accounts/{account_id}", timeout=timeout)
+    def get_limits(self, account_id: str, *, timeout: float | None = None) -> AccountLimits:
+        """Get platform-specific quota limits for a connected account."""
+        data = self._client._get(f"/v1/accounts/{account_id}/limits", timeout=timeout)
+        if "limits" in data:
+            return AccountLimits.model_validate(data)
+        return AccountLimits(limits=data)
 
 
 class AsyncAccounts:
@@ -158,26 +170,14 @@ class AsyncAccounts:
         *,
         brand_id: str | None = None,
         timeout: float | None = None,
-    ) -> AsyncCursorPage[Account]:
-        """List all connected social media accounts.
-
-        Args:
-            brand_id: Optional brand ID to filter accounts by.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of connected accounts.
-
-        Raises:
-            AuthenticationError: If the API key is invalid.
-        """
+    ) -> AsyncCursorPage[AsyncAccount]:
         params: dict[str, Any] = {}
         if brand_id is not None:
             params["brand_id"] = brand_id
         return await self._client._get_paginated(
             "/v1/accounts",
             params=params,
-            model=Account,
+            model=AsyncAccount,
             timeout=timeout,
         )
 
@@ -189,26 +189,6 @@ class AsyncAccounts:
         metadata: dict[str, Any] | None = None,
         timeout: float | None = None,
     ) -> ConnectAccountResponse | ConnectOAuthResponse:
-        """Initiate a new account connection.
-
-        For OAuth2 platforms (instagram, facebook, etc.) this returns a
-        ``ConnectOAuthResponse`` with an ``auth_url`` to redirect the user.
-        For direct-auth platforms it returns a ``ConnectAccountResponse``
-        with the new account details.
-
-        Args:
-            platform: Social platform identifier (e.g. ``"instagram"``).
-            brand_id: Optional brand to attach the account to.
-            metadata: Platform-specific connection data (e.g. ``redirect_uri``).
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A direct connection response or an OAuth redirect response.
-
-        Raises:
-            BadRequestError: If the platform is unsupported or metadata is missing.
-            AuthenticationError: If the API key is invalid.
-        """
         body: dict[str, Any] = {"platform": platform}
         if brand_id is not None:
             body["brand_id"] = brand_id
@@ -227,26 +207,7 @@ class AsyncAccounts:
         metadata: dict[str, Any],
         timeout: float | None = None,
     ) -> OAuthExchangeResponse:
-        """Exchange an OAuth authorization code for account credentials.
-
-        Args:
-            platform: Social platform identifier.
-            code: Authorization code from the platform callback.
-            metadata: Must include ``redirect_uri`` and ``state``.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The exchange result with connected account details.
-
-        Raises:
-            BadRequestError: If the code or metadata is invalid.
-            AuthenticationError: If the API key is invalid.
-        """
-        body: dict[str, Any] = {
-            "platform": platform,
-            "code": code,
-            "metadata": metadata,
-        }
+        body: dict[str, Any] = {"platform": platform, "code": code, "metadata": metadata}
         data = await self._client._post("/v1/oauth/exchange", json=body, timeout=timeout)
         if isinstance(data, dict) and "data" in data:
             accounts = [ConnectAccountResponse.model_validate(a) for a in data["data"]]
@@ -254,20 +215,71 @@ class AsyncAccounts:
         account = ConnectAccountResponse.model_validate(data)
         return OAuthExchangeResponse(accounts=[account])
 
-    async def disconnect(
+    async def disconnect(self, account_id: str, *, timeout: float | None = None) -> None:
+        await self._client._delete(f"/v1/accounts/{account_id}", timeout=timeout)
+
+    async def get_creator_info(self, account_id: str, *, timeout: float | None = None) -> CreatorInfo:
+        data = await self._client._get(f"/v1/accounts/{account_id}/creator-info", timeout=timeout)
+        return CreatorInfo.model_validate(data)
+
+    async def list_pages(self, account_id: str, *, timeout: float | None = None) -> list[AsyncPage]:
+        data = await self._client._get(f"/v1/accounts/{account_id}/pages", timeout=timeout)
+        raw_items: list[Any] = data.get("data", [])
+        items = [AsyncPage.model_validate(item) for item in raw_items]
+        for item in items:
+            item._bind(self._client, {"account_id": account_id})
+        return items
+
+    async def update_page(
+        self,
+        account_id: str,
+        page_id: str,
+        *,
+        is_default: bool | None = None,
+        is_active: bool | None = None,
+        timeout: float | None = None,
+    ) -> AsyncPage:
+        body: dict[str, Any] = {}
+        if is_default is not None:
+            body["is_default"] = is_default
+        if is_active is not None:
+            body["is_active"] = is_active
+        data = await self._client._patch(
+            f"/v1/accounts/{account_id}/pages/{page_id}",
+            json=body,
+            timeout=timeout,
+        )
+        page = AsyncPage.model_validate(data or {})
+        page._bind(self._client, {"account_id": account_id, "page_id": page_id})
+        return page
+
+    async def export(
         self,
         account_id: str,
         *,
+        include_transcript: bool | None = None,
+        include_vision: bool | None = None,
         timeout: float | None = None,
-    ) -> None:
-        """Disconnect (delete) a connected account.
+    ) -> AsyncExport:
+        body: dict[str, Any] = {}
+        if include_transcript is not None:
+            body["include_transcript"] = include_transcript
+        if include_vision is not None:
+            body["include_vision"] = include_vision
+        data = await self._client._post(
+            f"/v1/accounts/{account_id}/export",
+            json=body or None,
+            timeout=timeout,
+        )
+        export = AsyncExport.model_validate(data or {})
+        if export.id is not None:
+            export._bind(self._client, {"export_id": export.id, "account_id": account_id})
+        else:
+            export._bind(self._client, {"account_id": account_id})
+        return export
 
-        Args:
-            account_id: The account ID to disconnect.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the account does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
-        await self._client._delete(f"/v1/accounts/{account_id}", timeout=timeout)
+    async def get_limits(self, account_id: str, *, timeout: float | None = None) -> AccountLimits:
+        data = await self._client._get(f"/v1/accounts/{account_id}/limits", timeout=timeout)
+        if "limits" in data:
+            return AccountLimits.model_validate(data)
+        return AccountLimits(limits=data)

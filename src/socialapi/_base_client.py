@@ -302,12 +302,16 @@ class BaseSyncClient:
         params: dict[str, Any] | None = None,
         model: type[T],
         timeout: float | None = None,
+        bind_ctx: dict[str, Any] | None = None,
     ) -> CursorPage[T]:
         """Send a GET request and return a ``CursorPage[T]``.
 
         Handles both response envelope shapes:
         1. ``{"data": [...], "pagination": {"has_more": bool, "next_cursor": str}}``
         2. ``{"data": [...], "cursor": str | null}``
+
+        ``bind_ctx`` is forwarded to every model in the page (and to subsequent
+        pages fetched via ``next_page``) so that bound models keep their context.
         """
         from socialapi._pagination import CursorPage as _CursorPage
 
@@ -337,6 +341,7 @@ class BaseSyncClient:
             path=path,
             params=params or {},
             model=model,
+            bind_ctx=bind_ctx,
         )
 
     # -- lifecycle -------------------------------------------------------------
@@ -565,12 +570,16 @@ class BaseAsyncClient:
         params: dict[str, Any] | None = None,
         model: type[T],
         timeout: float | None = None,
+        bind_ctx: dict[str, Any] | None = None,
     ) -> AsyncCursorPage[T]:
         """Send a GET request and return an ``AsyncCursorPage[T]``.
 
         Handles both response envelope shapes:
         1. ``{"data": [...], "pagination": {"has_more": bool, "next_cursor": str}}``
         2. ``{"data": [...], "cursor": str | null}``
+
+        ``bind_ctx`` is forwarded to every model in the page (and to subsequent
+        pages fetched via ``next_page``) so that bound models keep their context.
         """
         from socialapi._pagination import AsyncCursorPage as _AsyncCursorPage
 
@@ -600,6 +609,7 @@ class BaseAsyncClient:
             path=path,
             params=params or {},
             model=model,
+            bind_ctx=bind_ctx,
         )
 
     # -- lifecycle -------------------------------------------------------------

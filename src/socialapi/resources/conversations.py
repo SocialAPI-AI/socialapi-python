@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from socialapi.models.conversations import (
+    AsyncConversation,
     Conversation,
     Message,
     SendMessageResponse,
@@ -31,23 +32,6 @@ class Conversations:
         cursor: str | None = None,
         timeout: float | None = None,
     ) -> CursorPage[Conversation]:
-        """List DM conversations.
-
-        Args:
-            account_id: Filter by connected account.
-            platform: Filter by platform.
-            status: Filter by conversation status (``"active"`` or ``"archived"``).
-            limit: Maximum number of results per page.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of conversations.
-
-        Raises:
-            AuthenticationError: If the API key is invalid.
-            BadRequestError: If query parameters are invalid.
-        """
         params: dict[str, Any] = {}
         if account_id is not None:
             params["account_id"] = account_id
@@ -66,27 +50,11 @@ class Conversations:
             timeout=timeout,
         )
 
-    def get(
-        self,
-        conversation_id: str,
-        *,
-        timeout: float | None = None,
-    ) -> Conversation:
-        """Get a single conversation by ID.
-
-        Args:
-            conversation_id: The conversation ID.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The conversation details.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
+    def get(self, conversation_id: str, *, timeout: float | None = None) -> Conversation:
         data = self._client._get(f"/v1/inbox/conversations/{conversation_id}", timeout=timeout)
-        return Conversation.model_validate(data.get("data", data))
+        conv = Conversation.model_validate(data.get("data", data))
+        conv._bind(self._client)
+        return conv
 
     def update(
         self,
@@ -95,28 +63,15 @@ class Conversations:
         status: str,
         timeout: float | None = None,
     ) -> Conversation:
-        """Update a conversation (e.g. archive it).
-
-        Args:
-            conversation_id: The conversation ID.
-            status: New status (``"active"`` or ``"archived"``).
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The updated conversation.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
         data = self._client._patch(
             f"/v1/inbox/conversations/{conversation_id}",
             json={"status": status},
             timeout=timeout,
         )
         if isinstance(data, dict) and "data" in data:
-            return Conversation.model_validate(data["data"])
-        # API returns {"success": true} — re-fetch the conversation
+            conv = Conversation.model_validate(data["data"])
+            conv._bind(self._client)
+            return conv
         return self.get(conversation_id, timeout=timeout)
 
     def list_messages(
@@ -127,21 +82,6 @@ class Conversations:
         cursor: str | None = None,
         timeout: float | None = None,
     ) -> CursorPage[Message]:
-        """List messages in a conversation.
-
-        Args:
-            conversation_id: The conversation ID.
-            limit: Maximum number of results per page.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of messages.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
         params: dict[str, Any] = {}
         if limit is not None:
             params["limit"] = limit
@@ -160,50 +100,21 @@ class Conversations:
         *,
         account_id: str,
         text: str,
+        attachment_url: str | None = None,
         timeout: float | None = None,
     ) -> SendMessageResponse:
-        """Send a message in a conversation.
-
-        Args:
-            conversation_id: The conversation ID.
-            account_id: The connected account ID to send from.
-            text: Message text content.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The send result with the new message ID.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
+        body: dict[str, Any] = {"account_id": account_id, "text": text}
+        if attachment_url is not None:
+            body["attachment_url"] = attachment_url
         data = self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/messages",
-            json={"account_id": account_id, "text": text},
+            json=body,
             timeout=timeout,
         )
         return SendMessageResponse.model_validate(data)
 
-    def mark_as_read(
-        self,
-        conversation_id: str,
-        *,
-        timeout: float | None = None,
-    ) -> None:
-        """Mark a conversation as read.
-
-        Args:
-            conversation_id: The conversation ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
-        self._client._post(
-            f"/v1/inbox/conversations/{conversation_id}/read",
-            timeout=timeout,
-        )
+    def mark_as_read(self, conversation_id: str, *, timeout: float | None = None) -> None:
+        self._client._post(f"/v1/inbox/conversations/{conversation_id}/read", timeout=timeout)
 
 
 class AsyncConversations:
@@ -223,24 +134,7 @@ class AsyncConversations:
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
-    ) -> AsyncCursorPage[Conversation]:
-        """List DM conversations.
-
-        Args:
-            account_id: Filter by connected account.
-            platform: Filter by platform.
-            status: Filter by conversation status (``"active"`` or ``"archived"``).
-            limit: Maximum number of results per page.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of conversations.
-
-        Raises:
-            AuthenticationError: If the API key is invalid.
-            BadRequestError: If query parameters are invalid.
-        """
+    ) -> AsyncCursorPage[AsyncConversation]:
         params: dict[str, Any] = {}
         if account_id is not None:
             params["account_id"] = account_id
@@ -255,31 +149,15 @@ class AsyncConversations:
         return await self._client._get_paginated(
             "/v1/inbox/conversations",
             params=params,
-            model=Conversation,
+            model=AsyncConversation,
             timeout=timeout,
         )
 
-    async def get(
-        self,
-        conversation_id: str,
-        *,
-        timeout: float | None = None,
-    ) -> Conversation:
-        """Get a single conversation by ID.
-
-        Args:
-            conversation_id: The conversation ID.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The conversation details.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
+    async def get(self, conversation_id: str, *, timeout: float | None = None) -> AsyncConversation:
         data = await self._client._get(f"/v1/inbox/conversations/{conversation_id}", timeout=timeout)
-        return Conversation.model_validate(data.get("data", data))
+        conv = AsyncConversation.model_validate(data.get("data", data))
+        conv._bind(self._client)
+        return conv
 
     async def update(
         self,
@@ -287,28 +165,16 @@ class AsyncConversations:
         *,
         status: str,
         timeout: float | None = None,
-    ) -> Conversation:
-        """Update a conversation (e.g. archive it).
-
-        Args:
-            conversation_id: The conversation ID.
-            status: New status (``"active"`` or ``"archived"``).
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The updated conversation.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
+    ) -> AsyncConversation:
         data = await self._client._patch(
             f"/v1/inbox/conversations/{conversation_id}",
             json={"status": status},
             timeout=timeout,
         )
         if isinstance(data, dict) and "data" in data:
-            return Conversation.model_validate(data["data"])
+            conv = AsyncConversation.model_validate(data["data"])
+            conv._bind(self._client)
+            return conv
         return await self.get(conversation_id, timeout=timeout)
 
     async def list_messages(
@@ -319,21 +185,6 @@ class AsyncConversations:
         cursor: str | None = None,
         timeout: float | None = None,
     ) -> AsyncCursorPage[Message]:
-        """List messages in a conversation.
-
-        Args:
-            conversation_id: The conversation ID.
-            limit: Maximum number of results per page.
-            cursor: Pagination cursor from a previous response.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            A paginated list of messages.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
         params: dict[str, Any] = {}
         if limit is not None:
             params["limit"] = limit
@@ -352,47 +203,18 @@ class AsyncConversations:
         *,
         account_id: str,
         text: str,
+        attachment_url: str | None = None,
         timeout: float | None = None,
     ) -> SendMessageResponse:
-        """Send a message in a conversation.
-
-        Args:
-            conversation_id: The conversation ID.
-            account_id: The connected account ID to send from.
-            text: Message text content.
-            timeout: Override the client-level timeout for this request.
-
-        Returns:
-            The send result with the new message ID.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
+        body: dict[str, Any] = {"account_id": account_id, "text": text}
+        if attachment_url is not None:
+            body["attachment_url"] = attachment_url
         data = await self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/messages",
-            json={"account_id": account_id, "text": text},
+            json=body,
             timeout=timeout,
         )
         return SendMessageResponse.model_validate(data)
 
-    async def mark_as_read(
-        self,
-        conversation_id: str,
-        *,
-        timeout: float | None = None,
-    ) -> None:
-        """Mark a conversation as read.
-
-        Args:
-            conversation_id: The conversation ID.
-            timeout: Override the client-level timeout for this request.
-
-        Raises:
-            NotFoundError: If the conversation does not exist.
-            AuthenticationError: If the API key is invalid.
-        """
-        await self._client._post(
-            f"/v1/inbox/conversations/{conversation_id}/read",
-            timeout=timeout,
-        )
+    async def mark_as_read(self, conversation_id: str, *, timeout: float | None = None) -> None:
+        await self._client._post(f"/v1/inbox/conversations/{conversation_id}/read", timeout=timeout)

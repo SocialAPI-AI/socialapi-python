@@ -4,12 +4,12 @@ from socialapi.resources.accounts import Accounts, AsyncAccounts
 from socialapi.resources.brands import AsyncBrands, Brands
 from socialapi.resources.comments import AsyncComments, Comments
 from socialapi.resources.conversations import AsyncConversations, Conversations
-from socialapi.resources.events import AsyncEvents, Events
-from socialapi.resources.feedback import AsyncFeedback, Feedback
+from socialapi.resources.exports import AsyncExports, Exports
 from socialapi.resources.invites import AsyncInvites, Invites
 from socialapi.resources.keys import AsyncKeys, Keys
 from socialapi.resources.media import AsyncMedia, Media
 from socialapi.resources.mentions import AsyncMentions, Mentions
+from socialapi.resources.oauth import AsyncOAuth, OAuth
 from socialapi.resources.posts import AsyncPosts, Posts
 from socialapi.resources.publishing import AsyncPublishing, Publishing
 from socialapi.resources.reviews import AsyncReviews, Reviews
@@ -23,12 +23,12 @@ __all__: list[str] = [
     "AsyncBrands",
     "AsyncComments",
     "AsyncConversations",
-    "AsyncEvents",
-    "AsyncFeedback",
+    "AsyncExports",
     "AsyncInvites",
     "AsyncKeys",
     "AsyncMedia",
     "AsyncMentions",
+    "AsyncOAuth",
     "AsyncPosts",
     "AsyncPublishing",
     "AsyncReviews",
@@ -38,12 +38,12 @@ __all__: list[str] = [
     "Brands",
     "Comments",
     "Conversations",
-    "Events",
-    "Feedback",
+    "Exports",
     "Invites",
     "Keys",
     "Media",
     "Mentions",
+    "OAuth",
     "Posts",
     "Publishing",
     "Reviews",
