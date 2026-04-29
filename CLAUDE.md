@@ -46,44 +46,49 @@ The SDK uses the **src layout** with `hatch` as the build backend. All source li
 
 ```
 src/socialapi/
-  __init__.py               <-- public surface: SocialAPI, AsyncSocialAPI, exceptions
-  _version.py               <-- single version string (__version__ = "0.0.1")
+  __init__.py               <-- public surface: SocialAPI, AsyncSocialAPI, models, exceptions
+  _version.py               <-- single version string (__version__ = "X.Y.Z")
   _client.py                <-- SocialAPI (sync) and AsyncSocialAPI (async) client classes
   _base_client.py           <-- shared HTTP logic, retry, error mapping, auth header injection
-  _types.py                 <-- shared type aliases (e.g. HeadersLike, QueryParams)
+  _bound.py                 <-- _Bound base class + UnboundModelError / MissingContextError
   _exceptions.py            <-- exception hierarchy (SocialAPIError tree)
   _pagination.py            <-- CursorPage iterator and async iterator for cursor-based pagination
-  _constants.py             <-- default base URL, user agent, timeouts
+  _constants.py             <-- default base URL, user agent, timeouts, enums (Platform, ...)
+  _config.py                <-- ClientConfig dataclass (immutable per-client settings)
   py.typed                  <-- PEP 561 marker (empty file, signals typed package)
   models/
     __init__.py
-    accounts.py             <-- Account, ConnectResponse, OAuthExchangeResponse
-    brands.py               <-- Brand, BrandList
-    comments.py             <-- InboxPost, Comment, CommentAuthor, CommentCapabilities
-    conversations.py        <-- Conversation, Message
-    events.py               <-- Event, EventList
-    feedback.py             <-- FeedbackResponse
-    keys.py                 <-- APIKey, CreateKeyResponse
-    media.py                <-- MediaItem, MediaUploadInfo, StorageUsage
-    mentions.py             <-- Interaction (reused from comments/reviews)
-    posts.py                <-- Post, PostTarget, PostMetrics, ValidationResult
-    reviews.py              <-- Review (alias of Interaction), ReviewReply
-    usage.py                <-- UsageInfo, AccountLimits
-    users.py                <-- User
-    webhooks.py             <-- WebhookEndpoint, CreateWebhookResponse
-    shared.py               <-- OKResponse, SuccessResponse, PaginationInfo, ErrorBody
+    accounts.py             <-- Account/AsyncAccount, Page/AsyncPage, CreatorInfo, Connect/OAuth*
+    brands.py               <-- Brand/AsyncBrand
+    comments.py             <-- InboxComment/AsyncInboxComment, CommentedPost/AsyncCommentedPost,
+                                CommentCapabilities, ReplyToCommentResponse
+    conversations.py        <-- Conversation/AsyncConversation, Message, SendMessageResponse
+    exports.py              <-- Export/AsyncExport, ExportVideo, CreateExportRequest
+    invites.py              <-- Invite/AsyncInvite, InviteListItem/AsyncInviteListItem
+    keys.py                 <-- APIKey/AsyncAPIKey, CreateKeyResponse
+    media.py                <-- MediaItem/AsyncMediaItem, StorageUsage
+    mentions.py             <-- Mention, MentionAuthor, MentionContent, MentionMedia (data only)
+    oauth.py                <-- OAuthRedirectURI/AsyncOAuthRedirectURI, CreateRedirectURIRequest
+    posts.py                <-- Post/AsyncPost, PostTarget, PostMetrics, ValidationResult
+    publishing.py           <-- Create/Update/Validate/Import request bodies, MediaUploadURL
+    reviews.py              <-- Review/AsyncReview, ReplyToReviewResponse
+    usage.py                <-- UsageResponse, AccountLimits (data only)
+    users.py                <-- User (data only)
+    webhooks.py             <-- Webhook/AsyncWebhook, CreateWebhookResponse
   resources/
     __init__.py
     accounts.py             <-- Accounts, AsyncAccounts
     brands.py               <-- Brands, AsyncBrands
     comments.py             <-- Comments, AsyncComments
     conversations.py        <-- Conversations, AsyncConversations
-    events.py               <-- Events, AsyncEvents
-    feedback.py             <-- Feedback, AsyncFeedback
+    exports.py              <-- Exports, AsyncExports
+    invites.py              <-- Invites, AsyncInvites
     keys.py                 <-- Keys, AsyncKeys
     media.py                <-- Media, AsyncMedia
     mentions.py             <-- Mentions, AsyncMentions
+    oauth.py                <-- OAuth, AsyncOAuth (redirect-uri whitelist management)
     posts.py                <-- Posts, AsyncPosts
+    publishing.py           <-- Publishing, AsyncPublishing
     reviews.py              <-- Reviews, AsyncReviews
     usage.py                <-- Usage, AsyncUsage
     users.py                <-- Users, AsyncUsers
@@ -91,15 +96,22 @@ src/socialapi/
 tests/
   conftest.py               <-- shared fixtures (httpx_mock, client, async_client)
   test_accounts.py
+  test_bound_models.py      <-- coverage for active-record action methods + ctx propagation
   test_brands.py
+  test_client.py
   test_comments.py
   test_conversations.py
-  test_events.py
-  test_feedback.py
+  test_exceptions.py
+  test_exports.py
+  test_invites.py
   test_keys.py
   test_media.py
   test_mentions.py
+  test_oauth.py
+  test_pagination.py
   test_posts.py
+  test_publishing.py
+  test_retry.py
   test_reviews.py
   test_usage.py
   test_users.py
@@ -113,6 +125,7 @@ tests/
 - **Methods:** `snake_case`. Match the REST verb semantics (e.g. `list`, `create`, `get`, `update`, `delete`, `reply`, `hide`, `unhide`).
 - **Constants:** `UPPER_SNAKE_CASE`.
 - **Models:** `PascalCase` Pydantic `BaseModel` subclasses. Field names use `snake_case` matching the API JSON keys exactly.
+- **Async-parallel models:** action-bearing models have a sync class (`InboxComment`, `Post`, `Conversation`, ...) and an `Async`-prefixed twin (`AsyncInboxComment`, `AsyncPost`, `AsyncConversation`). Both inherit shared fields from a private `_<Name>Base` class. Async resources return the `Async*` variant. Pure data models (`Message`, `Mention`, `User`, `Usage*`, `*Request`/`*Response` envelopes) are single classes — no `Async*` twin needed.
 
 ---
 
@@ -150,18 +163,38 @@ Each API domain is a resource class attached as a property on the client. Resour
 
 ```python
 class Accounts:
-    def __init__(self, client: BaseClient) -> None:
+    def __init__(self, client: BaseSyncClient) -> None:
         self._client = client
 
-    def list(self, *, brand_id: str | None = None) -> list[Account]:
-        params = {}
+    def list(self, *, brand_id: str | None = None) -> CursorPage[Account]:
+        params: dict[str, Any] = {}
         if brand_id is not None:
             params["brand_id"] = brand_id
-        resp = self._client.get("/v1/accounts", params=params)
-        return [Account.model_validate(a) for a in resp["data"]]
+        return self._client._get_paginated("/v1/accounts", params=params, model=Account)
 ```
 
 There is one sync resource class and one async resource class per API domain. They live in the same file (e.g. `resources/accounts.py` contains both `Accounts` and `AsyncAccounts`).
+
+### Active-record action methods (`_Bound` infrastructure)
+
+Models returned by resource calls are bound to the client that produced them, so users can call action methods directly on the object instead of always going through the resource:
+
+```python
+post = client.comments.list_posts(account_id="acc_1").data[0]
+for comment in post.list_comments():
+    comment.hide()              # uses comment._client + comment._ctx["account_id"]
+    comment.reply(text="Hi!")
+```
+
+Mechanics:
+
+- `_bound._Bound` is a `BaseModel` subclass with two `PrivateAttr` fields: `_client` (the `BaseSyncClient` or `BaseAsyncClient`) and `_ctx: dict[str, Any]` (contextual IDs the model itself doesn't always carry, e.g. `account_id` on a `Comment`).
+- Action-bearing domain models inherit from `_Bound` via a shared `_<Name>Base` (e.g. `_InboxCommentBase`); the sync and async leaves only override action methods.
+- Resources call `_client._get_paginated(..., bind_ctx={...})` for list endpoints and `obj._bind(client, ctx)` for single-result endpoints. Pagination threads `bind_ctx` through `next_page()` so auto-fetched pages also bind.
+- Inside an action method: `client = self._client_or_raise_sync()` (or `_async`); `account_id = self._ctx_value("account_id")`. These raise `UnboundModelError` / `MissingContextError` with a helpful message that points users back to the resource API.
+- Models built via `Model.model_validate(json)` from raw JSON (no client) have `_client=None` and remain pure data — the user can still inspect fields, just not act.
+
+The resource API is preserved for every endpoint and is the fallback when an unbound or partially-contextualized model is in hand.
 
 ### Cursor-based pagination
 
@@ -203,14 +236,17 @@ SocialAPIError (base)
   APIStatusError (HTTP 4xx/5xx from the API)
     BadRequestError          (400)
     AuthenticationError      (401)
+    ForbiddenError           (403)
     NotFoundError            (404)
     ConflictError            (409)
     StorageQuotaExceededError (413)
     RateLimitError           (429)
-    NotSupportedError        (501)
     InternalServerError      (500)
+    NotSupportedError        (501)
   APIConnectionError         (network failure, DNS, timeout)
-  APITimeoutError            (request timed out -- subclass of APIConnectionError)
+    APITimeoutError          (request timed out)
+  UnboundModelError          (action method called on a model with no _client)
+  MissingContextError        (bound action needs a _ctx key that wasn't seeded)
 ```
 
 ### APIStatusError attributes
@@ -318,6 +354,8 @@ async def test_accounts_list_async(httpx_mock, async_client):
 - Pagination iteration (mock two pages, assert auto-pagination yields all items).
 - Query parameter construction (assert the URL/params sent by httpx match expectations).
 - Request body serialization for POST/PATCH/PUT/DELETE endpoints.
+- Bound action methods (sync + async): both that they call the right URL/body and that calling them on an unbound model raises `UnboundModelError`. `test_bound_models.py` is the canonical home for these.
+- Context propagation: when a parent (e.g. `CommentedPost`) calls `list_comments()`, child models must inherit `account_id` and `inbox_post_id` in their `_ctx` so subsequent action methods work without extra args.
 
 ### What NOT to test
 
@@ -332,71 +370,89 @@ The SDK exposes **only** the public API endpoints. The source of truth is the MC
 
 ### Endpoint scope rules (MANDATORY)
 
-**NEVER** create modules for: `billing`, `provision`, `whitelist`, `media_library`, `search`, `subscriptions`, `plans`, `payments`.
+**NEVER** create modules for: `billing`, `provision`, `whitelist`, `media_library`, `search`, `subscriptions`, `plans`, `payments`. Even if the OpenAPI spec lists them (e.g. `/search`), they are out of scope for this SDK.
 
-**ONLY** create modules for the resources listed below.
+**ONLY** create modules for the resources listed below. The OpenAPI spec at `docs/api-reference/openapi.json` (in the SocAPI core repo) is the canonical source of truth for endpoint shape and schema; when in doubt, match it.
 
 ### Resource map
 
-| Resource class | REST endpoints | SDK methods |
-|---|---|---|
-| **Accounts** | `GET /v1/accounts` | `list(brand_id?)` |
-| | `POST /v1/accounts/connect` | `connect(platform, brand_id?, metadata?)` |
-| | `POST /v1/oauth/exchange` | `exchange_oauth(platform, code, metadata)` |
-| | `DELETE /v1/accounts/:id` | `disconnect(account_id)` |
-| **Brands** | `GET /v1/brands` | `list()` |
-| | `POST /v1/brands` | `create(name)` |
-| | `PATCH /v1/brands/:id` | `update(brand_id, name)` |
-| | `DELETE /v1/brands/:id` | `delete(brand_id)` |
-| **Comments** | `GET /v1/inbox/comments` | `list_posts(account_id?, platform?, ...)` |
-| | `GET /v1/inbox/comments/:postId` | `list(inbox_post_id, account_id, ...)` |
-| | `POST /v1/inbox/comments/:postId` | `reply(post_id, account_id, text, comment_id?)` |
-| | `DELETE /v1/inbox/comments/:p/:c` | `delete(post_id, comment_id, account_id)` |
-| | `POST .../hide` | `hide(post_id, comment_id, account_id)` |
-| | `DELETE .../hide` | `unhide(post_id, comment_id, account_id)` |
-| | `POST .../like` | `like(post_id, comment_id, account_id)` |
-| | `DELETE .../like` | `unlike(post_id, comment_id, account_id)` |
-| | `POST .../private-reply` | `private_reply(post_id, comment_id, account_id, text)` |
-| **Conversations** | `GET /v1/inbox/conversations` | `list(account_id?, platform?, status?, ...)` |
-| | `GET /v1/inbox/conversations/:id` | `get(conversation_id)` |
-| | `PATCH /v1/inbox/conversations/:id` | `update(conversation_id, status)` |
-| | `GET .../messages` | `list_messages(conversation_id, ...)` |
-| | `POST .../messages` | `send_message(conversation_id, account_id, text)` |
-| | `POST .../read` | `mark_as_read(conversation_id)` |
-| **Events** | `GET /v1/events` | `list(category?, status?, platform?, ...)` |
-| **Feedback** | `POST /v1/feedback` | `send(type, message)` |
-| **Keys** | `GET /v1/keys` | `list()` |
-| | `POST /v1/keys` | `create(name)` |
-| | `DELETE /v1/keys/:id` | `revoke(key_id)` |
-| **Media** | `GET /v1/media` | `list(limit?, cursor?)` |
-| | `GET /v1/media/upload-url` | `get_upload_url(media_type, filename)` |
-| | `POST /v1/media/:id/verify` | `verify_upload(media_id)` |
-| | `GET /v1/media/storage` | `get_storage_usage()` |
-| | `DELETE /v1/media/:id` | `delete(media_id)` |
-| **Mentions** | `GET /v1/accounts/:id/mentions` | `list(account_id, since?, limit?, cursor?)` |
-| **Posts** | `GET /v1/posts` | `list(account_ids?, status?, platform?, ...)` |
-| | `POST /v1/posts` | `create(text, targets?, scheduled_at?, ...)` |
-| | `GET /v1/posts/:pid` | `get(post_id)` |
-| | `PATCH /v1/posts/:pid` | `update(post_id, text?, targets?, ...)` |
-| | `DELETE /v1/posts/:pid` | `delete(post_id)` |
-| | `POST /v1/posts/:pid/retry` | `retry(post_id)` |
-| | `POST /v1/posts/:pid/unpublish` | `unpublish(post_id, account_id?)` |
-| | `GET /v1/posts/:pid/metrics` | `get_metrics(post_id)` |
-| | `GET /v1/posts/validate` | `get_constraints()` |
-| | `POST /v1/posts/validate` | `validate(text, platforms?, account_ids?, ...)` |
-| **Reviews** | `GET /v1/inbox/reviews` | `list(account_id?, platform?, ...)` |
-| | `POST /v1/inbox/reviews/:id/reply` | `reply(review_id, account_id, text)` |
-| | `PUT /v1/inbox/reviews/:id/reply` | `update_reply(review_id, account_id, text)` |
-| | `DELETE /v1/inbox/reviews/:id/reply` | `delete_reply(review_id, account_id)` |
-| **Usage** | `GET /v1/usage` | `get()` |
-| | `GET /v1/accounts/:id/limits` | `get_account_limits(account_id)` |
-| **Users** | `GET /v1/users/me` | `get_me()` |
-| | `PATCH /v1/users/me` | `update_me(onboarding?)` |
-| | `DELETE /v1/users/me` | `delete_me()` |
-| **Webhooks** | `GET /v1/webhooks` | `list()` |
-| | `POST /v1/webhooks` | `create(url, events)` |
-| | `PATCH /v1/webhooks/:id` | `update(webhook_id, url?, events?, is_active?)` |
-| | `DELETE /v1/webhooks/:id` | `delete(webhook_id)` |
+Resource methods (`client.<resource>.<method>`) and the active-record bound methods (`obj.<method>()`) are equivalent — the bound version just infers IDs from the object and its seeded `_ctx`.
+
+| Resource class | REST endpoints | SDK resource methods | Bound action methods |
+|---|---|---|---|
+| **Accounts** | `GET /v1/accounts` | `list(brand_id?)` | — |
+| | `POST /v1/accounts/connect` | `connect(platform, brand_id?, metadata?)` | — |
+| | `POST /v1/oauth/exchange` | `exchange_oauth(platform, code, metadata)` | — |
+| | `DELETE /v1/accounts/:id` | `disconnect(account_id)` | `Account.disconnect()` |
+| | `GET /v1/accounts/:id/creator-info` | `get_creator_info(account_id)` | `Account.get_creator_info()` |
+| | `GET /v1/accounts/:id/pages` | `list_pages(account_id)` | `Account.list_pages()` |
+| | `PATCH /v1/accounts/:id/pages/:pageId` | `update_page(account_id, page_id, ...)` | `Page.update(...)` |
+| | `POST /v1/accounts/:id/export` | `export(account_id, ...)` | `Account.export(...)` |
+| | `GET /v1/accounts/:id/limits` | `get_limits(account_id)` | `Account.get_limits()` |
+| **Brands** | `GET /v1/brands` | `list()` | — |
+| | `POST /v1/brands` | `create(name)` | — |
+| | `PATCH /v1/brands/:id` | `update(brand_id, name)` | `Brand.update(name)` |
+| | `DELETE /v1/brands/:id` | `delete(brand_id)` | `Brand.delete()` |
+| **Comments** | `GET /v1/inbox/comments` | `list_posts(account_id?, platform?, min_comments?, since?, ...)` | — |
+| | `GET /v1/inbox/comments/:postId` | `list(inbox_post_id, account_id, ...)` | `CommentedPost.list_comments()` |
+| | `POST /v1/inbox/comments/:postId` | `reply(post_id, account_id, text, comment_id?)` | `InboxComment.reply(text)`, `CommentedPost.reply(text)` |
+| | `GET /v1/inbox/comments/:p/:c/replies` | `list_replies(post_id, comment_id, account_id, ...)` | `InboxComment.list_replies()` |
+| | `DELETE /v1/inbox/comments/:p/:c` | `delete(post_id, comment_id, account_id)` | `InboxComment.delete()` |
+| | `POST .../hide` | `hide(post_id, comment_id, account_id)` | `InboxComment.hide()` |
+| | `DELETE .../hide` | `unhide(post_id, comment_id, account_id)` | `InboxComment.unhide()` |
+| | `POST .../like` | `like(post_id, comment_id, account_id)` | `InboxComment.like()` |
+| | `DELETE .../like` | `unlike(post_id, comment_id, account_id)` | `InboxComment.unlike()` |
+| | `POST .../private-reply` | `private_reply(post_id, comment_id, account_id, text)` | `InboxComment.private_reply(text)` |
+| **Conversations** | `GET /v1/inbox/conversations` | `list(account_id?, platform?, status?, ...)` | — |
+| | `GET /v1/inbox/conversations/:id` | `get(conversation_id)` | — |
+| | `PATCH /v1/inbox/conversations/:id` | `update(conversation_id, status)` | `Conversation.update(status)` |
+| | `GET .../messages` | `list_messages(conversation_id, ...)` | `Conversation.list_messages()` |
+| | `POST .../messages` | `send_message(conversation_id, account_id, text)` | `Conversation.send_message(text)` |
+| | `POST .../read` | `mark_as_read(conversation_id)` | `Conversation.mark_as_read()` |
+| **Exports** | `GET /v1/exports` | `list(status?)` | — |
+| | `GET /v1/exports/:id` | `get(export_id)` | `Export.refresh()` |
+| | `GET /exports/:id/videos` | `list_videos(export_id)` | `Export.list_videos()` |
+| **Invites** | `GET /v1/invites` | `list(brand_id)` | — |
+| | `POST /v1/invites` | `create(brand_id, platform, expires_in_days)` | — |
+| | `DELETE /v1/invites/:id` | `revoke(invite_id)` | `Invite.revoke()`, `InviteListItem.revoke()` |
+| **Keys** | `GET /v1/keys` | `list()` | — |
+| | `POST /v1/keys` | `create(name)` | — |
+| | `DELETE /v1/keys/:id` | `revoke(key_id)` | `APIKey.revoke()` |
+| **Media** | `GET /v1/media` | `list(limit?, cursor?)` | — |
+| | `GET /v1/media/upload-url` | `get_upload_url(media_type, filename)` | — |
+| | `POST /v1/media/:id/verify` | `verify(media_id)` | `MediaItem.verify()` |
+| | `GET /v1/media/storage` | `get_storage_usage()` | — |
+| | `DELETE /v1/media/:id` | `delete(media_id)` | `MediaItem.delete()` |
+| **Mentions** | `GET /v1/accounts/:id/mentions` | `list(account_id, since?, limit?, cursor?)` | — |
+| **OAuth** | `GET /v1/oauth/redirect-uris` | `list_redirect_uris()` | — |
+| | `POST /v1/oauth/redirect-uris` | `create_redirect_uri(uri, label?)` | — |
+| | `DELETE /v1/oauth/redirect-uris/:id` | `delete_redirect_uri(uri_id)` | `OAuthRedirectURI.delete()` |
+| **Posts** | `GET /v1/posts` | `list(account_ids?, status?, platform?, ...)` | — |
+| | `GET /v1/posts/:pid` | `get(post_id)` | — |
+| | `DELETE /v1/posts/:pid` | `delete(post_id)` | `Post.delete()` |
+| | `POST /v1/posts/:pid/retry` | `retry(post_id)` | `Post.retry()` |
+| | `POST /v1/posts/:pid/unpublish` | `unpublish(post_id, account_id?)` | `Post.unpublish(account_id?)` |
+| | `GET /v1/posts/:pid/metrics` | `get_metrics(post_id)` | `Post.get_metrics()` |
+| **Publishing** | `POST /v1/posts` | `create(text, targets?, scheduled_at?, ...)` | — |
+| | `PATCH /v1/posts/:pid` | `update(post_id, text?, targets?, ...)` | `Post.update(...)` |
+| | `GET /v1/posts/validate` | `get_constraints()` | — |
+| | `POST /v1/posts/validate` | `validate(text, platforms?, account_ids?, ...)` | — |
+| | `POST /v1/posts/import` | `import_posts(file, dry_run?)` | — |
+| | `GET /v1/media/upload-url` | `get_upload_url(media_type, filename)` | — |
+| | `POST /v1/media/:id/verify` | `verify_upload(media_id)` | — |
+| **Reviews** | `GET /v1/inbox/reviews` | `list(account_id?, platform?, ...)` | — |
+| | `POST /v1/inbox/reviews/:id/reply` | `reply(review_id, account_id, text)` | `Review.reply(text)` |
+| | `PUT /v1/inbox/reviews/:id/reply` | `update_reply(review_id, account_id, text)` | `Review.update_reply(text)` |
+| | `DELETE /v1/inbox/reviews/:id/reply` | `delete_reply(review_id, account_id)` | `Review.delete_reply()` |
+| **Usage** | `GET /v1/usage` | `get()` | — |
+| | `GET /v1/accounts/:id/limits` | `get_account_limits(account_id)` | — *(see `Account.get_limits()`)* |
+| **Users** | `GET /v1/users/me` | `get_me()` | — |
+| | `PATCH /v1/users/me` | `update_me(onboarding?)` | — |
+| | `DELETE /v1/users/me` | `delete_me()` | — |
+| **Webhooks** | `GET /v1/webhooks` | `list()` | — |
+| | `POST /v1/webhooks` | `create(url, events)` | — |
+| | `PATCH /v1/webhooks/:id` | `update(webhook_id, url?, events?, is_active?)` | `Webhook.update(...)` |
+| | `DELETE /v1/webhooks/:id` | `delete(webhook_id)` | `Webhook.delete()` |
 
 ### Webhook signature verification utility
 
