@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime  # noqa: TC003
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -22,6 +22,7 @@ class _ConversationBase(_Bound):
     id: str
     user_id: str
     account_id: str
+    page_id: str | None = None
     platform: str
     platform_id: str
     participant_id: str
@@ -38,7 +39,7 @@ class _ConversationBase(_Bound):
 class Conversation(_ConversationBase):
     """A DM conversation (sync)."""
 
-    def update(self, *, status: str, timeout: float | None = None) -> Conversation:
+    def update(self, *, status: Literal["active", "archived"], timeout: float | None = None) -> Conversation:
         client = self._client_or_raise_sync()
         data = client._patch(
             f"/v1/inbox/conversations/{self.id}",
@@ -79,12 +80,14 @@ class Conversation(_ConversationBase):
     def send_message(
         self,
         *,
-        text: str,
+        text: str | None = None,
         attachment_url: str | None = None,
         timeout: float | None = None,
     ) -> SendMessageResponse:
         client = self._client_or_raise_sync()
-        body: dict[str, Any] = {"account_id": self.account_id, "text": text}
+        body: dict[str, Any] = {"account_id": self.account_id}
+        if text is not None:
+            body["text"] = text
         if attachment_url is not None:
             body["attachment_url"] = attachment_url
         data = client._post(
@@ -102,7 +105,7 @@ class Conversation(_ConversationBase):
 class AsyncConversation(_ConversationBase):
     """A DM conversation (async)."""
 
-    async def update(self, *, status: str, timeout: float | None = None) -> AsyncConversation:
+    async def update(self, *, status: Literal["active", "archived"], timeout: float | None = None) -> AsyncConversation:
         client = self._client_or_raise_async()
         data = await client._patch(
             f"/v1/inbox/conversations/{self.id}",
@@ -142,12 +145,14 @@ class AsyncConversation(_ConversationBase):
     async def send_message(
         self,
         *,
-        text: str,
+        text: str | None = None,
         attachment_url: str | None = None,
         timeout: float | None = None,
     ) -> SendMessageResponse:
         client = self._client_or_raise_async()
-        body: dict[str, Any] = {"account_id": self.account_id, "text": text}
+        body: dict[str, Any] = {"account_id": self.account_id}
+        if text is not None:
+            body["text"] = text
         if attachment_url is not None:
             body["attachment_url"] = attachment_url
         data = await client._post(
@@ -181,6 +186,8 @@ class Message(BaseModel):
     sender_name: str
     attachment_type: str | None = None
     attachment_url: str | None = None
+    status: str | None = None
+    status_updated_at: datetime | None = None
     created_at: datetime
 
 
@@ -190,7 +197,7 @@ class SendMessageRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     account_id: str
-    text: str
+    text: str | None = None
     attachment_url: str | None = None
 
 
@@ -208,4 +215,4 @@ class UpdateConversationRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    status: str
+    status: Literal["active", "archived"]

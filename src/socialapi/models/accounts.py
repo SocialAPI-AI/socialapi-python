@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict
@@ -7,6 +8,7 @@ from pydantic import BaseModel, ConfigDict
 from socialapi._bound import _Bound
 
 if TYPE_CHECKING:
+    from socialapi.models.exports import AsyncExport, Export
     from socialapi.models.usage import AccountLimits
 
 
@@ -44,13 +46,27 @@ class Account(_AccountBase):
         client._delete(f"/v1/accounts/{self.id}", timeout=timeout)
 
     def get_creator_info(self, *, timeout: float | None = None) -> CreatorInfo:
-        """Fetch platform-specific creator settings (TikTok only)."""
+        """Fetch platform-specific creator settings (TikTok only).
+
+        Returns:
+            A CreatorInfo with platform-specific settings.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
         client = self._client_or_raise_sync()
         data = client._get(f"/v1/accounts/{self.id}/creator-info", timeout=timeout)
         return CreatorInfo.model_validate(data)
 
     def list_pages(self, *, timeout: float | None = None) -> list[Page]:
-        """List pages associated with this connected account."""
+        """List pages associated with this connected account.
+
+        Returns:
+            A list of Page objects bound to this account.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
         client = self._client_or_raise_sync()
         data = client._get(f"/v1/accounts/{self.id}/pages", timeout=timeout)
         raw_items: list[Any] = data.get("data", [])
@@ -59,14 +75,33 @@ class Account(_AccountBase):
             item._bind(client, {"account_id": self.id})
         return items
 
+    def list_boards(self, *, timeout: float | None = None) -> list[Board]:
+        """List Pinterest boards for this account.
+
+        Returns:
+            A list of Board objects.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
+        client = self._client_or_raise_sync()
+        data = client._get(f"/v1/accounts/{self.id}/boards", timeout=timeout)
+        raw_items: list[Any] = data.get("data", [])
+        return [Board.model_validate(item) for item in raw_items]
+
     def get_limits(self, *, timeout: float | None = None) -> AccountLimits:
-        """Get platform-specific quota limits for this account."""
+        """Get platform-specific quota limits for this account.
+
+        Returns:
+            An AccountLimits object with remaining quotas.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
         from socialapi.models.usage import AccountLimits
 
         client = self._client_or_raise_sync()
         data = client._get(f"/v1/accounts/{self.id}/limits", timeout=timeout)
-        if "limits" in data:
-            return AccountLimits.model_validate(data)
         return AccountLimits(limits=data)
 
     def export(
@@ -75,8 +110,22 @@ class Account(_AccountBase):
         include_transcript: bool | None = None,
         include_vision: bool | None = None,
         timeout: float | None = None,
-    ) -> dict[str, Any]:
-        """Enqueue an analytics export job for this account."""
+    ) -> Export:
+        """Enqueue an analytics export job for this account.
+
+        Args:
+            include_transcript: Whether to include transcripts in the export.
+            include_vision: Whether to include vision analysis in the export.
+            timeout: Optional request timeout in seconds.
+
+        Returns:
+            An Export object for the enqueued job.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
+        from socialapi.models.exports import Export as ExportModel
+
         client = self._client_or_raise_sync()
         body: dict[str, Any] = {}
         if include_transcript is not None:
@@ -84,24 +133,48 @@ class Account(_AccountBase):
         if include_vision is not None:
             body["include_vision"] = include_vision
         data = client._post(f"/v1/accounts/{self.id}/export", json=body or None, timeout=timeout)
-        if data is None:
-            return {}
-        return data
+        export = ExportModel.model_validate(data or {})
+        if export.id is not None:
+            export._bind(client, {"export_id": export.id, "account_id": self.id})
+        else:
+            export._bind(client, {"account_id": self.id})
+        return export
 
 
 class AsyncAccount(_AccountBase):
     """A connected social media account (async)."""
 
     async def disconnect(self, *, timeout: float | None = None) -> None:
+        """Disconnect this account.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
         client = self._client_or_raise_async()
         await client._delete(f"/v1/accounts/{self.id}", timeout=timeout)
 
     async def get_creator_info(self, *, timeout: float | None = None) -> CreatorInfo:
+        """Fetch platform-specific creator settings (TikTok only).
+
+        Returns:
+            A CreatorInfo with platform-specific settings.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
         client = self._client_or_raise_async()
         data = await client._get(f"/v1/accounts/{self.id}/creator-info", timeout=timeout)
         return CreatorInfo.model_validate(data)
 
     async def list_pages(self, *, timeout: float | None = None) -> list[AsyncPage]:
+        """List pages associated with this connected account.
+
+        Returns:
+            A list of AsyncPage objects bound to this account.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
         client = self._client_or_raise_async()
         data = await client._get(f"/v1/accounts/{self.id}/pages", timeout=timeout)
         raw_items: list[Any] = data.get("data", [])
@@ -110,13 +183,33 @@ class AsyncAccount(_AccountBase):
             item._bind(client, {"account_id": self.id})
         return items
 
+    async def list_boards(self, *, timeout: float | None = None) -> list[Board]:
+        """List Pinterest boards for this account.
+
+        Returns:
+            A list of Board objects.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
+        client = self._client_or_raise_async()
+        data = await client._get(f"/v1/accounts/{self.id}/boards", timeout=timeout)
+        raw_items: list[Any] = data.get("data", [])
+        return [Board.model_validate(item) for item in raw_items]
+
     async def get_limits(self, *, timeout: float | None = None) -> AccountLimits:
+        """Get platform-specific quota limits for this account.
+
+        Returns:
+            An AccountLimits object with remaining quotas.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
         from socialapi.models.usage import AccountLimits
 
         client = self._client_or_raise_async()
         data = await client._get(f"/v1/accounts/{self.id}/limits", timeout=timeout)
-        if "limits" in data:
-            return AccountLimits.model_validate(data)
         return AccountLimits(limits=data)
 
     async def export(
@@ -125,7 +218,22 @@ class AsyncAccount(_AccountBase):
         include_transcript: bool | None = None,
         include_vision: bool | None = None,
         timeout: float | None = None,
-    ) -> dict[str, Any]:
+    ) -> AsyncExport:
+        """Enqueue an analytics export job for this account.
+
+        Args:
+            include_transcript: Whether to include transcripts in the export.
+            include_vision: Whether to include vision analysis in the export.
+            timeout: Optional request timeout in seconds.
+
+        Returns:
+            An AsyncExport object for the enqueued job.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+        """
+        from socialapi.models.exports import AsyncExport as AsyncExportModel
+
         client = self._client_or_raise_async()
         body: dict[str, Any] = {}
         if include_transcript is not None:
@@ -133,7 +241,12 @@ class AsyncAccount(_AccountBase):
         if include_vision is not None:
             body["include_vision"] = include_vision
         data = await client._post(f"/v1/accounts/{self.id}/export", json=body or None, timeout=timeout)
-        return data or {}
+        export = AsyncExportModel.model_validate(data or {})
+        if export.id is not None:
+            export._bind(client, {"export_id": export.id, "account_id": self.id})
+        else:
+            export._bind(client, {"account_id": self.id})
+        return export
 
 
 # ---------------------------------------------------------------------------
@@ -144,17 +257,26 @@ class AsyncAccount(_AccountBase):
 class _PageBase(_Bound):
     """Fields for a page (e.g. Facebook Page) attached to an account.
 
-    The OpenAPI spec marks the response as a free-form object; the SDK
-    validates the commonly-returned fields and tolerates extras.
+    Matches AccountPage wire shape (service.AccountPage).
     """
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
     id: str | None = None
     name: str | None = None
-    platform_id: str | None = None
+    platform_page_id: str | None = None
     is_default: bool | None = None
     is_active: bool | None = None
+    # Enrichment fields from AccountPage Go struct
+    about: str | None = None
+    category: str | None = None
+    cover_photo_url: str | None = None
+    enriched_at: datetime | None = None
+    followers_count: int | None = None
+    link: str | None = None
+    profile_picture_url: str | None = None
+    username: str | None = None
+    verification_status: str | None = None
 
 
 class Page(_PageBase):
@@ -167,6 +289,20 @@ class Page(_PageBase):
         is_active: bool | None = None,
         timeout: float | None = None,
     ) -> Page:
+        """Update this page's is_default or is_active status.
+
+        Args:
+            is_default: Whether this page should be the default.
+            is_active: Whether this page should be active.
+            timeout: Optional request timeout in seconds.
+
+        Returns:
+            An updated Page object.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+            MissingContextError: If account_id is missing from context.
+        """
         client = self._client_or_raise_sync()
         account_id = self._ctx_value("account_id")
         page_id = self.id or self._ctx_value("page_id")
@@ -197,6 +333,20 @@ class AsyncPage(_PageBase):
         is_active: bool | None = None,
         timeout: float | None = None,
     ) -> AsyncPage:
+        """Update this page's is_default or is_active status.
+
+        Args:
+            is_default: Whether this page should be the default.
+            is_active: Whether this page should be active.
+            timeout: Optional request timeout in seconds.
+
+        Returns:
+            An updated AsyncPage object.
+
+        Raises:
+            UnboundModelError: If this model was not built by a client.
+            MissingContextError: If account_id is missing from context.
+        """
         client = self._client_or_raise_async()
         account_id = self._ctx_value("account_id")
         page_id = self.id or self._ctx_value("page_id")
@@ -215,6 +365,21 @@ class AsyncPage(_PageBase):
             updated._bind(client, {"account_id": account_id, "page_id": page_id})
             return updated
         return self
+
+
+# ---------------------------------------------------------------------------
+# Board (sub-resource of Account, Pinterest only)
+# ---------------------------------------------------------------------------
+
+
+class Board(BaseModel):
+    """A Pinterest board item returned by ``GET /v1/accounts/:id/boards``."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    name: str
+    privacy: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -254,6 +419,8 @@ class ConnectAccountRequest(BaseModel):
     platform: str
     brand_id: str | None = None
     metadata: dict[str, Any] | None = None
+    redirect_uri: str | None = None
+    state: str | None = None
 
 
 class ConnectAccountResponse(BaseModel):
@@ -264,6 +431,7 @@ class ConnectAccountResponse(BaseModel):
     account_id: str
     platform: str
     username: str
+    display_name: str | None = None
 
 
 class ConnectOAuthResponse(BaseModel):
@@ -274,6 +442,7 @@ class ConnectOAuthResponse(BaseModel):
     auth_url: str
     state: str
     message: str
+    metadata: dict[str, Any] | None = None
 
 
 class OAuthExchangeRequest(BaseModel):
@@ -283,7 +452,7 @@ class OAuthExchangeRequest(BaseModel):
 
     platform: str
     code: str
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any]
 
 
 class OAuthExchangeResponse(BaseModel):

@@ -66,11 +66,38 @@ class Comments:
         inbox_post_id: str,
         *,
         account_id: str,
+        moderation_status: str | None = None,
+        order: str | None = None,
+        q: str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
     ) -> CursorPage[InboxComment]:
+        """List comments for an inbox post.
+
+        Args:
+            inbox_post_id: The inbox post ID to list comments for.
+            account_id: The connected account ID.
+            moderation_status: Filter by moderation status (e.g. published, held_for_review).
+            order: Sort order (e.g. recent, relevance).
+            q: Free-text keyword search.
+            limit: Maximum number of comments to return.
+            cursor: Pagination cursor.
+            timeout: Optional request timeout in seconds.
+
+        Returns:
+            A CursorPage of InboxComment objects.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         params: dict[str, Any] = {"account_id": account_id}
+        if moderation_status is not None:
+            params["moderation_status"] = moderation_status
+        if order is not None:
+            params["order"] = order
+        if q is not None:
+            params["q"] = q
         if limit is not None:
             params["limit"] = limit
         if cursor is not None:
@@ -258,11 +285,38 @@ class AsyncComments:
         inbox_post_id: str,
         *,
         account_id: str,
+        moderation_status: str | None = None,
+        order: str | None = None,
+        q: str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
     ) -> AsyncCursorPage[AsyncInboxComment]:
+        """List comments for an inbox post.
+
+        Args:
+            inbox_post_id: The inbox post ID to list comments for.
+            account_id: The connected account ID.
+            moderation_status: Filter by moderation status (e.g. published, held_for_review).
+            order: Sort order (e.g. recent, relevance).
+            q: Free-text keyword search.
+            limit: Maximum number of comments to return.
+            cursor: Pagination cursor.
+            timeout: Optional request timeout in seconds.
+
+        Returns:
+            An AsyncCursorPage of AsyncInboxComment objects.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         params: dict[str, Any] = {"account_id": account_id}
+        if moderation_status is not None:
+            params["moderation_status"] = moderation_status
+        if order is not None:
+            params["order"] = order
+        if q is not None:
+            params["q"] = q
         if limit is not None:
             params["limit"] = limit
         if cursor is not None:

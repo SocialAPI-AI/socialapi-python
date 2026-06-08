@@ -28,6 +28,7 @@ def test_get_usage(httpx_mock, client) -> None:
 
 
 def test_get_account_limits(httpx_mock, client) -> None:
+    """API returns a bare map -- SDK wraps it into AccountLimits(limits=...)."""
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/accounts/acc_ig_001/limits",
         json={"posts_remaining": 95, "api_calls_remaining": 4800},
@@ -35,16 +36,6 @@ def test_get_account_limits(httpx_mock, client) -> None:
     limits = client.usage.get_account_limits("acc_ig_001")
     assert limits.limits["posts_remaining"] == 95
     assert limits.limits["api_calls_remaining"] == 4800
-
-
-def test_get_account_limits_with_limits_key(httpx_mock, client) -> None:
-    """Test the branch where the API returns {"limits": {...}}."""
-    httpx_mock.add_response(
-        url=f"{BASE_URL}/v1/accounts/acc_ig_001/limits",
-        json={"limits": {"posts_remaining": 50, "api_calls_remaining": 2000}},
-    )
-    limits = client.usage.get_account_limits("acc_ig_001")
-    assert limits.limits["posts_remaining"] == 50
 
 
 async def test_get_usage_async(httpx_mock, async_client) -> None:
@@ -74,10 +65,12 @@ async def test_get_account_limits_async(httpx_mock, async_client) -> None:
     assert limits.limits["posts_remaining"] == 80
 
 
-async def test_get_account_limits_async_with_limits_key(httpx_mock, async_client) -> None:
+async def test_get_account_limits_async_bare_map(httpx_mock, async_client) -> None:
+    """API always returns a bare map; async path wraps into AccountLimits(limits=...)."""
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/accounts/acc_ig_001/limits",
-        json={"limits": {"posts_remaining": 30}},
+        json={"posts_remaining": 30, "api_calls_remaining": 1000},
     )
     limits = await async_client.usage.get_account_limits("acc_ig_001")
     assert limits.limits["posts_remaining"] == 30
+    assert limits.limits["api_calls_remaining"] == 1000

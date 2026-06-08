@@ -10,6 +10,62 @@ POST_JSON = {
     "updated_at": "2026-03-20T10:00:00Z",
 }
 
+# Wire shape: nested constraints as returned by GET /v1/posts/validate
+CONSTRAINTS_JSON = {
+    "data": {
+        "instagram": {
+            "text": {
+                "max_length": 2200,
+                "max_hashtags": 30,
+                "max_mentions": 20,
+                "counting_mode": "chars",
+            },
+            "media": {
+                "max_image_size_bytes": 8388608,
+                "max_video_size_bytes": 314572800,
+                "max_video_duration_sec": 900,
+                "min_video_duration_sec": 3,
+                "max_video_fps": 0,
+                "supported_image_types": ["image/jpeg"],
+                "supported_video_types": ["video/mp4", "video/quicktime"],
+            },
+            "carousel": {
+                "supported": True,
+                "min_items": 2,
+                "max_items": 10,
+                "allow_video": True,
+                "images_only": False,
+                "photos_only": False,
+            },
+        },
+        "linkedin": {
+            "text": {
+                "max_length": 3000,
+                "max_hashtags": 0,
+                "max_mentions": 0,
+                "counting_mode": "chars",
+            },
+            "media": {
+                "max_image_size_bytes": 10485760,
+                "max_video_size_bytes": 524288000,
+                "max_video_duration_sec": 1800,
+                "min_video_duration_sec": 3,
+                "max_video_fps": 30,
+                "supported_image_types": ["image/jpeg", "image/png", "image/gif"],
+                "supported_video_types": ["video/mp4"],
+            },
+            "carousel": {
+                "supported": True,
+                "min_items": 2,
+                "max_items": 20,
+                "allow_video": False,
+                "images_only": True,
+                "photos_only": False,
+            },
+        },
+    }
+}
+
 
 def test_create_post(httpx_mock, client) -> None:
     httpx_mock.add_response(
@@ -42,19 +98,18 @@ def test_update_post(httpx_mock, client) -> None:
 def test_delete_post(httpx_mock, client) -> None:
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/posts/post_new_001",
-        status_code=204,
+        json={"success": True, "deleted": True, "results": []},
     )
     client.posts.delete("post_new_001")
 
 
 def test_retry_post(httpx_mock, client) -> None:
-    retried = {**POST_JSON, "status": "publishing"}
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/posts/post_new_001/retry",
-        json=retried,
+        json={"success": True},
     )
-    post = client.posts.retry("post_new_001")
-    assert post.status == "publishing"
+    result = client.posts.retry("post_new_001")
+    assert result is None
 
 
 def test_validate_post(httpx_mock, client) -> None:
@@ -73,27 +128,34 @@ def test_validate_post(httpx_mock, client) -> None:
     assert result.warnings[0].platform == "instagram"
 
 
-def test_get_constraints(httpx_mock, client) -> None:
+def test_get_constraints_nested_shape(httpx_mock, client) -> None:
+    """get_constraints() parses nested wire shape (text/media/carousel sub-objects)."""
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/posts/validate",
-        json={
-            "data": {
-                "instagram": {"max_text_length": 2200, "max_images": 10, "supports_scheduling": True},
-                "linkedin": {"max_text_length": 3000, "max_images": 9},
-            }
-        },
+        json=CONSTRAINTS_JSON,
     )
     constraints = client.publishing.get_constraints()
     assert "instagram" in constraints
-    assert constraints["instagram"].max_text_length == 2200
-    assert constraints["instagram"].platform == "instagram"
+    ig = constraints["instagram"]
+    assert ig.text.max_length == 2200
+    assert ig.text.max_hashtags == 30
+    assert ig.text.counting_mode == "chars"
+    assert ig.media.max_image_size_bytes == 8388608
+    assert ig.media.supported_image_types == ["image/jpeg"]
+    assert ig.carousel.supported is True
+    assert ig.carousel.max_items == 10
+
     assert "linkedin" in constraints
-    assert constraints["linkedin"].max_text_length == 3000
+    li = constraints["linkedin"]
+    assert li.text.max_length == 3000
+    assert li.media.max_video_fps == 30
+    assert li.carousel.images_only is True
 
 
-def test_get_upload_url(httpx_mock, client) -> None:
+def test_get_upload_url_sends_media_type_param(httpx_mock, client) -> None:
+    """get_upload_url() must send media_type (not content_type) as query param."""
     httpx_mock.add_response(
-        url=f"{BASE_URL}/v1/media/upload-url?content_type=image%2Fjpeg&filename=photo.jpg",
+        url=f"{BASE_URL}/v1/media/upload-url?media_type=image%2Fjpeg&filename=photo.jpg",
         json={
             "media_id": "media_001",
             "upload_url": "https://storage.example.com/presigned/abc123",
@@ -103,6 +165,41 @@ def test_get_upload_url(httpx_mock, client) -> None:
     result = client.publishing.get_upload_url(media_type="image/jpeg", filename="photo.jpg")
     assert result.media_id == "media_001"
     assert result.upload_url.startswith("https://storage.example.com")
+    # Confirm the param name sent
+    req = httpx_mock.get_requests()[0]
+    assert "media_type=image" in str(req.url)
+    assert "content_type" not in str(req.url)
+
+
+def test_import_posts_multipart(httpx_mock, client) -> None:
+    """import_posts() must send multipart/form-data with a 'file' field."""
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/posts/import",
+        json={"total_rows": 2, "created": 2, "failed": 0, "errors": [], "posts": []},
+    )
+    csv_bytes = b"text,title\nHello world,My Title\nSecond post,Another"
+    result = client.publishing.import_posts(file=csv_bytes, filename="posts.csv")
+    assert result.total_rows == 2
+    assert result.created == 2
+
+    req = httpx_mock.get_requests()[0]
+    content_type = req.headers.get("content-type", "")
+    assert "multipart/form-data" in content_type
+    assert b"posts.csv" in req.content
+
+
+def test_import_posts_dry_run(httpx_mock, client) -> None:
+    """import_posts(dry_run=True) passes dry_run=true as query param."""
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/posts/import?dry_run=true",
+        json={"total_rows": 1, "created": 0, "failed": 0, "errors": [], "posts": []},
+    )
+    csv_bytes = b"text\nHello world"
+    result = client.publishing.import_posts(file=csv_bytes, filename="posts.csv", dry_run=True)
+    assert result.total_rows == 1
+
+    req = httpx_mock.get_requests()[0]
+    assert "dry_run=true" in str(req.url)
 
 
 def test_create_post_with_all_options(httpx_mock, client) -> None:
@@ -201,6 +298,22 @@ def test_verify_upload(httpx_mock, client) -> None:
     client.publishing.verify_upload("media_001")
 
 
+def test_target_request_has_page_id() -> None:
+    """TargetRequest model must accept page_id field."""
+    from socialapi.models.publishing import TargetRequest
+
+    tr = TargetRequest(account_id="acc_001", page_id="sapi_page_001")
+    assert tr.page_id == "sapi_page_001"
+
+
+def test_target_request_page_id_optional() -> None:
+    """TargetRequest page_id is optional."""
+    from socialapi.models.publishing import TargetRequest
+
+    tr = TargetRequest(account_id="acc_001")
+    assert tr.page_id is None
+
+
 async def test_create_post_async(httpx_mock, async_client) -> None:
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/posts",
@@ -249,18 +362,18 @@ async def test_update_post_async(httpx_mock, async_client) -> None:
     assert post.text == "Async updated"
 
 
-async def test_get_constraints_async(httpx_mock, async_client) -> None:
+async def test_get_constraints_nested_shape_async(httpx_mock, async_client) -> None:
+    """get_constraints() parses nested wire shape (async)."""
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/posts/validate",
-        json={
-            "data": {
-                "instagram": {"max_text_length": 2200, "max_images": 10},
-            }
-        },
+        json=CONSTRAINTS_JSON,
     )
     constraints = await async_client.publishing.get_constraints()
     assert "instagram" in constraints
-    assert constraints["instagram"].max_text_length == 2200
+    ig = constraints["instagram"]
+    assert ig.text.max_length == 2200
+    assert ig.media.max_image_size_bytes == 8388608
+    assert ig.carousel.supported is True
 
 
 async def test_validate_post_async(httpx_mock, async_client) -> None:
@@ -284,9 +397,10 @@ async def test_validate_post_async(httpx_mock, async_client) -> None:
     assert len(result.errors) == 1
 
 
-async def test_get_upload_url_async(httpx_mock, async_client) -> None:
+async def test_get_upload_url_sends_media_type_param_async(httpx_mock, async_client) -> None:
+    """get_upload_url() must send media_type (not content_type) as query param (async)."""
     httpx_mock.add_response(
-        url=f"{BASE_URL}/v1/media/upload-url?content_type=image%2Fpng&filename=pic.png",
+        url=f"{BASE_URL}/v1/media/upload-url?media_type=image%2Fpng&filename=pic.png",
         json={
             "media_id": "media_002",
             "upload_url": "https://storage.example.com/presigned/xyz",
@@ -295,6 +409,24 @@ async def test_get_upload_url_async(httpx_mock, async_client) -> None:
     )
     result = await async_client.publishing.get_upload_url(media_type="image/png", filename="pic.png")
     assert result.media_id == "media_002"
+    req = httpx_mock.get_requests()[0]
+    assert "media_type=image" in str(req.url)
+    assert "content_type" not in str(req.url)
+
+
+async def test_import_posts_multipart_async(httpx_mock, async_client) -> None:
+    """import_posts() must send multipart/form-data (async)."""
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/posts/import",
+        json={"total_rows": 1, "created": 1, "failed": 0, "errors": [], "posts": []},
+    )
+    csv_bytes = b"text\nHello world"
+    result = await async_client.publishing.import_posts(file=csv_bytes, filename="posts.csv")
+    assert result.total_rows == 1
+
+    req = httpx_mock.get_requests()[0]
+    content_type = req.headers.get("content-type", "")
+    assert "multipart/form-data" in content_type
 
 
 async def test_verify_upload_async(httpx_mock, async_client) -> None:

@@ -16,12 +16,17 @@ class MentionMedia(BaseModel):
 
 
 class MentionAuthor(BaseModel):
-    """Author of a mention interaction."""
+    """Author of a mention interaction.
+
+    All fields are optional because the Go ``Author`` struct uses ``omitempty``
+    on every JSON tag, meaning any field may be absent on the wire.
+    """
 
     model_config = ConfigDict(populate_by_name=True)
 
-    id: str
-    name: str
+    id: str | None = None
+    name: str | None = None
+    username: str | None = None
     avatar_url: str | None = None
 
 
@@ -35,7 +40,10 @@ class MentionContent(BaseModel):
 
 
 class Mention(BaseModel):
-    """A mention of the connected account on a social platform."""
+    """A mention of the connected account on a social platform.
+
+    Maps to the ``base.Interaction`` struct returned by ``GET /v1/accounts/:id/mentions``.
+    """
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -43,8 +51,12 @@ class Mention(BaseModel):
     platform: str
     type: str
     author: MentionAuthor
+    recipient: MentionAuthor | None = None
     content: MentionContent
     metadata: dict[str, Any] | None = None
-    created_at: datetime
+    received_at: datetime
     account_id: str
-    platform_id: str
+    # Optional fields (omitempty in Go)
+    platform_post_id: str | None = None
+    post_id: str | None = None
+    conversation_id: str | None = None

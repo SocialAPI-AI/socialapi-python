@@ -3,6 +3,7 @@ from __future__ import annotations
 import httpx
 
 from socialapi._exceptions import (
+    AccountNotFoundError,
     APIStatusError,
     AuthenticationError,
     BadRequestError,
@@ -10,6 +11,7 @@ from socialapi._exceptions import (
     InternalServerError,
     NotFoundError,
     NotSupportedError,
+    PlatformRateLimitError,
     RateLimitError,
     StorageQuotaExceededError,
 )
@@ -123,3 +125,80 @@ def test_exception_without_json_body() -> None:
     assert isinstance(exc, InternalServerError)
     assert exc.body is None
     assert exc.code is None
+
+
+# ---------------------------------------------------------------------------
+# TDD: nested error envelope (Fix 1 + Fix 2)
+# ---------------------------------------------------------------------------
+
+
+def test_nested_envelope_account_not_found() -> None:
+    """Nested envelope: error.code + error.message + request_id are parsed correctly."""
+    resp = _make_response(
+        404,
+        {"error": {"code": "account.not_found", "message": "no account"}, "request_id": "req_1"},
+    )
+    exc = APIStatusError.from_response(resp)
+    assert isinstance(exc, AccountNotFoundError)
+    assert exc.message == "no account"
+    assert exc.code == "account.not_found"
+    assert exc.request_id == "req_1"
+
+
+def test_nested_envelope_platform_rate_limit_suffix() -> None:
+    """Suffix matching: codes ending in .rate_limit map to PlatformRateLimitError."""
+    resp = _make_response(
+        429,
+        {"error": {"code": "platform.instagram.rate_limit", "message": "slow down"}},
+    )
+    exc = APIStatusError.from_response(resp)
+    assert isinstance(exc, PlatformRateLimitError)
+    assert exc.message == "slow down"
+    assert exc.code == "platform.instagram.rate_limit"
+
+
+def test_nested_envelope_platform_auth_suffix() -> None:
+    """Suffix matching: codes ending in .auth map to AuthenticationError."""
+    resp = _make_response(
+        401,
+        {"error": {"code": "platform.tiktok.auth", "message": "reauth"}},
+    )
+    exc = APIStatusError.from_response(resp)
+    assert isinstance(exc, AuthenticationError)
+    assert exc.message == "reauth"
+    assert exc.code == "platform.tiktok.auth"
+
+
+def test_flat_envelope_back_compat() -> None:
+    """Legacy flat envelope: {"error": "msg"} on a 400 yields BadRequestError with correct message."""
+    resp = _make_response(400, {"error": "legacy msg"})
+    exc = APIStatusError.from_response(resp)
+    assert isinstance(exc, BadRequestError)
+    assert exc.message == "legacy msg"
+
+
+def test_request_id_none_when_absent() -> None:
+    """request_id attribute is None when not present in response body."""
+    resp = _make_response(500, {"error": {"code": "system.internal", "message": "boom"}})
+    exc = APIStatusError.from_response(resp)
+    assert exc.request_id is None
+
+
+# ---------------------------------------------------------------------------
+# Item B: GoneError (HTTP 410)
+# ---------------------------------------------------------------------------
+
+
+def test_gone_error_invite_expired() -> None:
+    """410 Gone with code invite.expired yields GoneError with correct attributes."""
+    from socialapi._exceptions import GoneError
+
+    resp = _make_response(
+        410,
+        {"error": {"code": "invite.expired", "message": "expired"}},
+    )
+    exc = APIStatusError.from_response(resp)
+    assert isinstance(exc, GoneError)
+    assert exc.status_code == 410
+    assert exc.code == "invite.expired"
+    assert exc.message == "expired"

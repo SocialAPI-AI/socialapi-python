@@ -118,6 +118,26 @@ class Publishing:
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> Post:
+        """Create or schedule a post.
+
+        Args:
+            text: Post body text. Required.
+            title: Optional post title.
+            media_ids: Previously uploaded media IDs to attach.
+            visibility: Visibility (``public``, ``private``, ``connections_only``).
+            first_comment: Auto-posted as the first comment after publishing.
+            scheduled_at: Future publication time (RFC3339 or datetime).
+            publish_now: Publish immediately when ``True``.
+            skip_duplicate_check: Bypass duplicate content detection.
+            targets: Per-platform target configuration.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            The created Post.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         body = _build_create_body(
             text=text,
             title=title,
@@ -148,6 +168,26 @@ class Publishing:
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> Post:
+        """Update a post.
+
+        Args:
+            post_id: Post ID.
+            text: New post body text.
+            title: New post title.
+            media_ids: New media IDs.
+            visibility: New visibility.
+            first_comment: New first comment.
+            scheduled_at: New schedule time.
+            hidden: Archive or unarchive.
+            targets: New target configuration.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            Updated Post.
+
+        Raises:
+            NotFoundError: If the post does not exist.
+        """
         body = _build_update_body(
             text=text,
             title=title,
@@ -169,12 +209,24 @@ class Publishing:
         platform: str | None = None,
         timeout: float | None = None,
     ) -> dict[str, PlatformConstraints]:
+        """Return platform content constraints.
+
+        Args:
+            platform: Optional platform slug to filter to a single platform.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            Mapping of platform slug to PlatformConstraints.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         params: dict[str, Any] = {}
         if platform is not None:
             params["platform"] = platform
         data = self._client._get("/v1/posts/validate", params=params or None, timeout=timeout)
         raw: dict[str, Any] = data.get("data", data)
-        return {k: PlatformConstraints.model_validate({**v, "platform": k}) for k, v in raw.items()}
+        return {k: PlatformConstraints.model_validate(v) for k, v in raw.items()}
 
     def validate(
         self,
@@ -187,6 +239,23 @@ class Publishing:
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> ValidationResult:
+        """Validate post content against platform rules.
+
+        Args:
+            text: Post content to validate.
+            platforms: Platform slugs to validate against.
+            account_ids: Account IDs whose platforms are resolved automatically.
+            media_ids: Media IDs to validate.
+            scheduled_at: Schedule time to validate.
+            targets: Per-target overrides to validate.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            ValidationResult with errors and warnings.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         body = _build_validate_body(
             text=text,
             platforms=platforms,
@@ -205,27 +274,69 @@ class Publishing:
         filename: str,
         timeout: float | None = None,
     ) -> MediaUploadURL:
-        params: dict[str, Any] = {"content_type": media_type, "filename": filename}
+        """Get a presigned S3 upload URL for a media file.
+
+        Args:
+            media_type: MIME type (e.g. ``image/jpeg``).
+            filename: Original filename.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            MediaUploadURL with the presigned URL and expiry.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
+        params: dict[str, Any] = {"media_type": media_type, "filename": filename}
         data = self._client._get("/v1/media/upload-url", params=params, timeout=timeout)
         return MediaUploadURL.model_validate(data)
 
     def verify_upload(self, media_id: str, *, timeout: float | None = None) -> None:
+        """Confirm a presigned-URL upload completed successfully.
+
+        Args:
+            media_id: Media ID returned by get_upload_url.
+            timeout: Per-request timeout in seconds.
+
+        Raises:
+            NotFoundError: If the media item does not exist.
+        """
         self._client._post(f"/v1/media/{media_id}/verify", timeout=timeout)
 
     def import_posts(
         self,
         *,
-        file: Any,
+        file: bytes,
+        filename: str,
         dry_run: bool = False,
         timeout: float | None = None,
     ) -> ImportPostsResponse:
+        """Bulk import posts from a CSV file.
+
+        Args:
+            file: CSV file bytes.
+            filename: Filename for the upload (e.g. ``posts.csv``).
+            dry_run: When ``True``, validates without creating posts.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            ImportPostsResponse with row counts and any errors.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         params: dict[str, Any] = {}
         if dry_run:
             params["dry_run"] = "true"
-        data = self._client._post(
-            "/v1/posts/import",
-            json={"file": "csv"},
-            params=params or None,
+        path = "/v1/posts/import"
+        if params:
+            from socialapi._base_client import _build_query_params
+
+            qs = "&".join(f"{k}={v}" for k, v in _build_query_params(params).items())
+            path = f"{path}?{qs}"
+        data = self._client._post_multipart(
+            path,
+            files={"file": (filename, file, "text/csv")},
             timeout=timeout,
         )
         return ImportPostsResponse.model_validate(data)
@@ -253,6 +364,26 @@ class AsyncPublishing:
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> AsyncPost:
+        """Create or schedule a post.
+
+        Args:
+            text: Post body text. Required.
+            title: Optional post title.
+            media_ids: Previously uploaded media IDs to attach.
+            visibility: Visibility (``public``, ``private``, ``connections_only``).
+            first_comment: Auto-posted as the first comment after publishing.
+            scheduled_at: Future publication time (RFC3339 or datetime).
+            publish_now: Publish immediately when ``True``.
+            skip_duplicate_check: Bypass duplicate content detection.
+            targets: Per-platform target configuration.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            The created AsyncPost.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         body = _build_create_body(
             text=text,
             title=title,
@@ -283,6 +414,26 @@ class AsyncPublishing:
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> AsyncPost:
+        """Update a post.
+
+        Args:
+            post_id: Post ID.
+            text: New post body text.
+            title: New post title.
+            media_ids: New media IDs.
+            visibility: New visibility.
+            first_comment: New first comment.
+            scheduled_at: New schedule time.
+            hidden: Archive or unarchive.
+            targets: New target configuration.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            Updated AsyncPost.
+
+        Raises:
+            NotFoundError: If the post does not exist.
+        """
         body = _build_update_body(
             text=text,
             title=title,
@@ -304,12 +455,24 @@ class AsyncPublishing:
         platform: str | None = None,
         timeout: float | None = None,
     ) -> dict[str, PlatformConstraints]:
+        """Return platform content constraints.
+
+        Args:
+            platform: Optional platform slug to filter to a single platform.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            Mapping of platform slug to PlatformConstraints.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         params: dict[str, Any] = {}
         if platform is not None:
             params["platform"] = platform
         data = await self._client._get("/v1/posts/validate", params=params or None, timeout=timeout)
         raw: dict[str, Any] = data.get("data", data)
-        return {k: PlatformConstraints.model_validate({**v, "platform": k}) for k, v in raw.items()}
+        return {k: PlatformConstraints.model_validate(v) for k, v in raw.items()}
 
     async def validate(
         self,
@@ -322,6 +485,23 @@ class AsyncPublishing:
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> ValidationResult:
+        """Validate post content against platform rules.
+
+        Args:
+            text: Post content to validate.
+            platforms: Platform slugs to validate against.
+            account_ids: Account IDs whose platforms are resolved automatically.
+            media_ids: Media IDs to validate.
+            scheduled_at: Schedule time to validate.
+            targets: Per-target overrides to validate.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            ValidationResult with errors and warnings.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         body = _build_validate_body(
             text=text,
             platforms=platforms,
@@ -340,27 +520,69 @@ class AsyncPublishing:
         filename: str,
         timeout: float | None = None,
     ) -> MediaUploadURL:
-        params: dict[str, Any] = {"content_type": media_type, "filename": filename}
+        """Get a presigned S3 upload URL for a media file.
+
+        Args:
+            media_type: MIME type (e.g. ``image/jpeg``).
+            filename: Original filename.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            MediaUploadURL with the presigned URL and expiry.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
+        params: dict[str, Any] = {"media_type": media_type, "filename": filename}
         data = await self._client._get("/v1/media/upload-url", params=params, timeout=timeout)
         return MediaUploadURL.model_validate(data)
 
     async def verify_upload(self, media_id: str, *, timeout: float | None = None) -> None:
+        """Confirm a presigned-URL upload completed successfully.
+
+        Args:
+            media_id: Media ID returned by get_upload_url.
+            timeout: Per-request timeout in seconds.
+
+        Raises:
+            NotFoundError: If the media item does not exist.
+        """
         await self._client._post(f"/v1/media/{media_id}/verify", timeout=timeout)
 
     async def import_posts(
         self,
         *,
-        file: Any,
+        file: bytes,
+        filename: str,
         dry_run: bool = False,
         timeout: float | None = None,
     ) -> ImportPostsResponse:
+        """Bulk import posts from a CSV file.
+
+        Args:
+            file: CSV file bytes.
+            filename: Filename for the upload (e.g. ``posts.csv``).
+            dry_run: When ``True``, validates without creating posts.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            ImportPostsResponse with row counts and any errors.
+
+        Raises:
+            AuthenticationError: If the API key is invalid.
+        """
         params: dict[str, Any] = {}
         if dry_run:
             params["dry_run"] = "true"
-        data = await self._client._post(
-            "/v1/posts/import",
-            json={"file": "csv"},
-            params=params or None,
+        path = "/v1/posts/import"
+        if params:
+            from socialapi._base_client import _build_query_params
+
+            qs = "&".join(f"{k}={v}" for k, v in _build_query_params(params).items())
+            path = f"{path}?{qs}"
+        data = await self._client._post_multipart(
+            path,
+            files={"file": (filename, file, "text/csv")},
             timeout=timeout,
         )
         return ImportPostsResponse.model_validate(data)

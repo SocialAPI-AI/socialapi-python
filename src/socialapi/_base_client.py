@@ -293,6 +293,71 @@ class BaseSyncClient:
         data: dict[str, Any] = cast("dict[str, Any]", response.json())
         return data
 
+    def _post_multipart(
+        self,
+        path: str,
+        *,
+        files: dict[str, Any],
+        timeout: float | None = None,
+    ) -> dict[str, Any] | None:
+        """Send a multipart/form-data POST request and return the parsed JSON body.
+
+        Args:
+            path: API path (e.g. ``/v1/media/upload``).
+            files: Mapping passed as the ``files=`` argument to httpx -- each
+                value should be a ``(filename, content)`` or
+                ``(filename, content, content_type)`` tuple.
+            timeout: Optional per-request timeout in seconds.
+
+        Returns:
+            Parsed JSON body, or ``None`` for 204/empty responses.
+        """
+        url = f"{self._config.base_url}{path}"
+        headers = self._build_headers()
+        # Omit the Content-Type header so httpx can set the multipart boundary.
+        headers.pop("Accept", None)
+
+        request = self._client.build_request(
+            "POST",
+            url,
+            files=files,
+            headers=headers,
+            timeout=httpx.Timeout(timeout) if timeout is not None else None,
+        )
+
+        retries_taken = 0
+        max_retries = self._config.max_retries
+
+        while True:
+            response: httpx.Response | None = None
+            try:
+                response = self._client.send(request)
+            except httpx.TimeoutException as exc:
+                if retries_taken >= max_retries:
+                    raise APITimeoutError(f"Request timed out: {exc}", request=request) from exc
+                time.sleep(_calculate_retry_delay(retries_taken, None))
+                retries_taken += 1
+                continue
+            except httpx.ConnectError as exc:
+                if retries_taken >= max_retries:
+                    raise APIConnectionError(f"Connection error: {exc}", request=request) from exc
+                time.sleep(_calculate_retry_delay(retries_taken, None))
+                retries_taken += 1
+                continue
+
+            if _should_retry_status(response.status_code) and retries_taken < max_retries:
+                time.sleep(_calculate_retry_delay(retries_taken, response))
+                retries_taken += 1
+                continue
+
+            if response.status_code >= 400:
+                raise APIStatusError.from_response(response)
+
+            if response.status_code == 204 or not response.text:
+                return None
+            data: dict[str, Any] = cast("dict[str, Any]", response.json())
+            return data
+
     # -- paginated GET ---------------------------------------------------------
 
     def _get_paginated(
@@ -306,9 +371,10 @@ class BaseSyncClient:
     ) -> CursorPage[T]:
         """Send a GET request and return a ``CursorPage[T]``.
 
-        Handles both response envelope shapes:
+        Handles all response envelope shapes:
         1. ``{"data": [...], "pagination": {"has_more": bool, "next_cursor": str}}``
-        2. ``{"data": [...], "cursor": str | null}``
+        2. ``{"data": [...], "next_cursor": str | null}`` (e.g. Mentions endpoint)
+        3. ``{"data": [...], "cursor": str | null}`` (legacy flat cursor)
 
         ``bind_ctx`` is forwarded to every model in the page (and to subsequent
         pages fetched via ``next_page``) so that bound models keep their context.
@@ -329,7 +395,10 @@ class BaseSyncClient:
             cursor_val: Any = pagination_dict.get("next_cursor")
             next_cursor = str(cursor_val) if cursor_val is not None else None
         else:
-            cursor_val2: Any = body.get("cursor")
+            # Check next_cursor first (e.g. Mentions), fall back to cursor (legacy)
+            cursor_val2: Any = body.get("next_cursor")
+            if cursor_val2 is None:
+                cursor_val2 = body.get("cursor")
             next_cursor = str(cursor_val2) if cursor_val2 is not None else None
             has_more = next_cursor is not None
 
@@ -561,6 +630,70 @@ class BaseAsyncClient:
         data: dict[str, Any] = cast("dict[str, Any]", response.json())
         return data
 
+    async def _post_multipart(
+        self,
+        path: str,
+        *,
+        files: dict[str, Any],
+        timeout: float | None = None,
+    ) -> dict[str, Any] | None:
+        """Send a multipart/form-data POST request and return the parsed JSON body.
+
+        Args:
+            path: API path (e.g. ``/v1/media/upload``).
+            files: Mapping passed as the ``files=`` argument to httpx -- each
+                value should be a ``(filename, content)`` or
+                ``(filename, content, content_type)`` tuple.
+            timeout: Optional per-request timeout in seconds.
+
+        Returns:
+            Parsed JSON body, or ``None`` for 204/empty responses.
+        """
+        url = f"{self._config.base_url}{path}"
+        headers = self._build_headers()
+        headers.pop("Accept", None)
+
+        request = self._client.build_request(
+            "POST",
+            url,
+            files=files,
+            headers=headers,
+            timeout=httpx.Timeout(timeout) if timeout is not None else None,
+        )
+
+        retries_taken = 0
+        max_retries = self._config.max_retries
+
+        while True:
+            response: httpx.Response | None = None
+            try:
+                response = await self._client.send(request)
+            except httpx.TimeoutException as exc:
+                if retries_taken >= max_retries:
+                    raise APITimeoutError(f"Request timed out: {exc}", request=request) from exc
+                await asyncio.sleep(_calculate_retry_delay(retries_taken, None))
+                retries_taken += 1
+                continue
+            except httpx.ConnectError as exc:
+                if retries_taken >= max_retries:
+                    raise APIConnectionError(f"Connection error: {exc}", request=request) from exc
+                await asyncio.sleep(_calculate_retry_delay(retries_taken, None))
+                retries_taken += 1
+                continue
+
+            if _should_retry_status(response.status_code) and retries_taken < max_retries:
+                await asyncio.sleep(_calculate_retry_delay(retries_taken, response))
+                retries_taken += 1
+                continue
+
+            if response.status_code >= 400:
+                raise APIStatusError.from_response(response)
+
+            if response.status_code == 204 or not response.text:
+                return None
+            data: dict[str, Any] = cast("dict[str, Any]", response.json())
+            return data
+
     # -- paginated GET ---------------------------------------------------------
 
     async def _get_paginated(
@@ -574,9 +707,10 @@ class BaseAsyncClient:
     ) -> AsyncCursorPage[T]:
         """Send a GET request and return an ``AsyncCursorPage[T]``.
 
-        Handles both response envelope shapes:
+        Handles all response envelope shapes:
         1. ``{"data": [...], "pagination": {"has_more": bool, "next_cursor": str}}``
-        2. ``{"data": [...], "cursor": str | null}``
+        2. ``{"data": [...], "next_cursor": str | null}`` (e.g. Mentions endpoint)
+        3. ``{"data": [...], "cursor": str | null}`` (legacy flat cursor)
 
         ``bind_ctx`` is forwarded to every model in the page (and to subsequent
         pages fetched via ``next_page``) so that bound models keep their context.
@@ -597,7 +731,10 @@ class BaseAsyncClient:
             cursor_val: Any = pagination_dict.get("next_cursor")
             next_cursor = str(cursor_val) if cursor_val is not None else None
         else:
-            cursor_val2: Any = body.get("cursor")
+            # Check next_cursor first (e.g. Mentions), fall back to cursor (legacy)
+            cursor_val2: Any = body.get("next_cursor")
+            if cursor_val2 is None:
+                cursor_val2 = body.get("cursor")
             next_cursor = str(cursor_val2) if cursor_val2 is not None else None
             has_more = next_cursor is not None
 

@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime  # noqa: TC003
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
-
-if TYPE_CHECKING:
-    from socialapi.models.posts import Post
 
 
 class TargetRequest(BaseModel):
@@ -15,6 +12,7 @@ class TargetRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     account_id: str
+    page_id: str | None = None
     text: str | None = None
     title: str | None = None
     media_ids: list[str] | None = None
@@ -76,20 +74,61 @@ class ValidatePostRequest(BaseModel):
     targets: list[TargetRequest] | None = None
 
 
-class PlatformConstraints(BaseModel):
-    """Platform-specific content constraints from ``GET /v1/posts/validate``."""
+# ---------------------------------------------------------------------------
+# Nested constraint sub-models (wire shape from PlatformConstraints in Go)
+# ---------------------------------------------------------------------------
+
+
+class ConstraintsText(BaseModel):
+    """Text constraints for a platform."""
 
     model_config = ConfigDict(populate_by_name=True)
 
-    platform: str
-    max_text_length: int | None = None
-    max_title_length: int | None = None
-    max_images: int | None = None
-    max_videos: int | None = None
-    max_media: int | None = None
-    supported_media_types: list[str] | None = None
-    supports_scheduling: bool | None = None
-    min_schedule_ahead_minutes: int | None = None
+    max_length: int = 0
+    max_hashtags: int = 0
+    max_mentions: int = 0
+    counting_mode: str = "chars"
+
+
+class ConstraintsMedia(BaseModel):
+    """Media constraints for a platform."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    max_image_size_bytes: int = 0
+    max_video_size_bytes: int = 0
+    max_video_duration_sec: int = 0
+    min_video_duration_sec: int = 0
+    max_video_fps: int = 0
+    supported_image_types: list[str] | None = None
+    supported_video_types: list[str] | None = None
+
+
+class ConstraintsCarousel(BaseModel):
+    """Carousel constraints for a platform."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    supported: bool = False
+    min_items: int = 0
+    max_items: int = 0
+    allow_video: bool = False
+    images_only: bool = False
+    photos_only: bool = False
+
+
+class PlatformConstraints(BaseModel):
+    """Platform-specific content constraints from ``GET /v1/posts/validate``.
+
+    The wire shape is nested: ``text``, ``media``, and ``carousel`` sub-objects
+    matching the Go ``service.PlatformConstraints`` struct.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    text: ConstraintsText = ConstraintsText()
+    media: ConstraintsMedia = ConstraintsMedia()
+    carousel: ConstraintsCarousel = ConstraintsCarousel()
 
 
 class MediaUploadURL(BaseModel):
@@ -128,4 +167,4 @@ class ImportPostsResponse(BaseModel):
     created: int
     failed: int
     errors: list[ImportRowError] | None = None
-    posts: list[Post] | None = None
+    posts: list[Any] | None = None
