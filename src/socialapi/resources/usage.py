@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from socialapi.models.usage import AccountLimits, UsageResponse
 
@@ -55,10 +55,7 @@ class Usage:
             AuthenticationError: If the API key is invalid.
         """
         data = self._client._get(f"/v1/accounts/{account_id}/limits", timeout=timeout)
-        # API returns the limits dict directly (not wrapped in "data")
-        if "limits" not in data:
-            return AccountLimits(limits=cast("dict[str, int]", data))
-        return AccountLimits.model_validate(data)
+        return AccountLimits(limits=data)
 
 
 class AsyncUsage:
@@ -108,6 +105,4 @@ class AsyncUsage:
             AuthenticationError: If the API key is invalid.
         """
         data = await self._client._get(f"/v1/accounts/{account_id}/limits", timeout=timeout)
-        if "limits" not in data:
-            return AccountLimits(limits=cast("dict[str, int]", data))
-        return AccountLimits.model_validate(data)
+        return AccountLimits(limits=data)

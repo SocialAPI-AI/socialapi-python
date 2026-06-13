@@ -13,6 +13,7 @@ class PostTargetError(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
+    code: str | None = None
     message: str
     category: str
     caused_by: str
@@ -36,6 +37,7 @@ class PostTarget(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     account_id: str | None = None
+    page_id: str | None = None
     platform: str
     status: str
     text: str | None = None
@@ -50,6 +52,32 @@ class PostTarget(BaseModel):
     metrics_synced_at: datetime | None = None
     error: PostTargetError | None = None
     metadata: dict[str, Any] | None = None
+
+
+# ---------------------------------------------------------------------------
+# Delete response models
+# ---------------------------------------------------------------------------
+
+
+class TargetDeleteOutcome(BaseModel):
+    """Per-platform result of a delete operation."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    platform: str
+    account_id: str | None = None
+    outcome: str
+    message: str | None = None
+
+
+class DeletePostResponse(BaseModel):
+    """Response from ``DELETE /v1/posts/:pid``."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool
+    deleted: bool
+    results: list[TargetDeleteOutcome]
 
 
 # ---------------------------------------------------------------------------
@@ -91,6 +119,25 @@ class Post(_PostBase):
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> Post:
+        """Update the post.
+
+        Args:
+            text: New text content.
+            title: New title.
+            media_ids: New media IDs.
+            visibility: New visibility.
+            first_comment: New first comment.
+            scheduled_at: New schedule time.
+            hidden: Archive/unarchive the post.
+            targets: New target configuration.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            Updated Post instance.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_sync()
         body: dict[str, Any] = {}
         if text is not None:
@@ -116,27 +163,44 @@ class Post(_PostBase):
             return updated
         return self
 
-    def delete(self, *, platform: str | None = None, timeout: float | None = None) -> None:
-        client = self._client_or_raise_sync()
-        params: dict[str, Any] = {}
-        if platform is not None:
-            params["platform"] = platform
-        client._delete(f"/v1/posts/{self.id}", params=params or None, timeout=timeout)
+    def delete(self, *, timeout: float | None = None) -> DeletePostResponse:
+        """Delete this post.
 
-    def retry(self, *, timeout: float | None = None) -> Post:
+        Args:
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            DeletePostResponse with per-platform results.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_sync()
-        data = client._post(f"/v1/posts/{self.id}/retry", timeout=timeout)
-        if isinstance(data, dict) and "id" in data:
-            updated = Post.model_validate(data)
-            updated._bind(client)
-            return updated
-        # {"success": true} -> re-fetch
-        refetch = client._get(f"/v1/posts/{self.id}", timeout=timeout)
-        updated = Post.model_validate(refetch)
-        updated._bind(client)
-        return updated
+        data = client._delete(f"/v1/posts/{self.id}", timeout=timeout)
+        return DeletePostResponse.model_validate(data)
+
+    def retry(self, *, timeout: float | None = None) -> None:
+        """Retry a failed post.
+
+        Args:
+            timeout: Per-request timeout in seconds.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
+        client = self._client_or_raise_sync()
+        client._post(f"/v1/posts/{self.id}/retry", timeout=timeout)
 
     def unpublish(self, *, account_id: str | None = None, timeout: float | None = None) -> None:
+        """Unpublish this post.
+
+        Args:
+            account_id: Optional account to unpublish from (otherwise all).
+            timeout: Per-request timeout in seconds.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_sync()
         body: dict[str, Any] = {}
         if account_id is not None:
@@ -144,6 +208,17 @@ class Post(_PostBase):
         client._post(f"/v1/posts/{self.id}/unpublish", json=body or None, timeout=timeout)
 
     def get_metrics(self, *, timeout: float | None = None) -> PostMetrics:
+        """Fetch live metrics for this post.
+
+        Args:
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            PostMetrics with per-platform engagement data.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_sync()
         data = client._get(f"/v1/posts/{self.id}/metrics", timeout=timeout)
         raw: dict[str, Any] = data.get("data", data)
@@ -166,6 +241,25 @@ class AsyncPost(_PostBase):
         targets: list[dict[str, Any]] | None = None,
         timeout: float | None = None,
     ) -> AsyncPost:
+        """Update the post.
+
+        Args:
+            text: New text content.
+            title: New title.
+            media_ids: New media IDs.
+            visibility: New visibility.
+            first_comment: New first comment.
+            scheduled_at: New schedule time.
+            hidden: Archive/unarchive the post.
+            targets: New target configuration.
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            Updated AsyncPost instance.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_async()
         body: dict[str, Any] = {}
         if text is not None:
@@ -191,26 +285,44 @@ class AsyncPost(_PostBase):
             return updated
         return self
 
-    async def delete(self, *, platform: str | None = None, timeout: float | None = None) -> None:
-        client = self._client_or_raise_async()
-        params: dict[str, Any] = {}
-        if platform is not None:
-            params["platform"] = platform
-        await client._delete(f"/v1/posts/{self.id}", params=params or None, timeout=timeout)
+    async def delete(self, *, timeout: float | None = None) -> DeletePostResponse:
+        """Delete this post.
 
-    async def retry(self, *, timeout: float | None = None) -> AsyncPost:
+        Args:
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            DeletePostResponse with per-platform results.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_async()
-        data = await client._post(f"/v1/posts/{self.id}/retry", timeout=timeout)
-        if isinstance(data, dict) and "id" in data:
-            updated = AsyncPost.model_validate(data)
-            updated._bind(client)
-            return updated
-        refetch = await client._get(f"/v1/posts/{self.id}", timeout=timeout)
-        updated = AsyncPost.model_validate(refetch)
-        updated._bind(client)
-        return updated
+        data = await client._delete(f"/v1/posts/{self.id}", timeout=timeout)
+        return DeletePostResponse.model_validate(data)
+
+    async def retry(self, *, timeout: float | None = None) -> None:
+        """Retry a failed post.
+
+        Args:
+            timeout: Per-request timeout in seconds.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
+        client = self._client_or_raise_async()
+        await client._post(f"/v1/posts/{self.id}/retry", timeout=timeout)
 
     async def unpublish(self, *, account_id: str | None = None, timeout: float | None = None) -> None:
+        """Unpublish this post.
+
+        Args:
+            account_id: Optional account to unpublish from (otherwise all).
+            timeout: Per-request timeout in seconds.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_async()
         body: dict[str, Any] = {}
         if account_id is not None:
@@ -218,6 +330,17 @@ class AsyncPost(_PostBase):
         await client._post(f"/v1/posts/{self.id}/unpublish", json=body or None, timeout=timeout)
 
     async def get_metrics(self, *, timeout: float | None = None) -> PostMetrics:
+        """Fetch live metrics for this post.
+
+        Args:
+            timeout: Per-request timeout in seconds.
+
+        Returns:
+            PostMetrics with per-platform engagement data.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_async()
         data = await client._get(f"/v1/posts/{self.id}/metrics", timeout=timeout)
         raw: dict[str, Any] = data.get("data", data)

@@ -11,13 +11,14 @@ COMMENTED_POST_JSON = {
     "content": "My first post",
     "comment_count": 5,
     "like_count": 42,
+    "published_at": "2026-03-19T08:00:00Z",
     "created_at": "2026-03-20T10:00:00Z",
     "updated_at": "2026-03-20T12:00:00Z",
 }
 
+# Wire shape: ProxyCommentRow embedded in CommentWithCapabilities.
+# No 'id' field; platform_id is the comment identifier.
 COMMENT_JSON = {
-    "id": "cmt_001",
-    "inbox_post_id": "ip_001",
     "platform_id": "17890099999",
     "platform": "instagram",
     "text": "Great post!",
@@ -27,8 +28,9 @@ COMMENT_JSON = {
     "is_owner": False,
     "like_count": 3,
     "reply_count": 1,
+    "has_replies": True,
     "is_hidden": False,
-    "is_liked": False,
+    "moderation_status": "published",
     "created_at": "2026-03-20T11:00:00Z",
     "capabilities": {
         "can_reply": True,
@@ -51,6 +53,18 @@ def test_list_commented_posts(httpx_mock, client) -> None:
     assert page.data[0].comment_count == 5
 
 
+def test_commented_post_page_id_and_published_at(httpx_mock, client) -> None:
+    """InboxPostRow includes page_id and published_at fields."""
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/inbox/comments",
+        json={"data": [COMMENTED_POST_JSON], "pagination": {"has_more": False, "next_cursor": None}},
+    )
+    page = client.comments.list_posts()
+    post = page.data[0]
+    assert post.published_at is not None
+    assert post.page_id is None  # not set in COMMENTED_POST_JSON
+
+
 def test_list_post_comments(httpx_mock, client) -> None:
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/inbox/comments/ip_001?account_id=acc_ig_001",
@@ -60,6 +74,26 @@ def test_list_post_comments(httpx_mock, client) -> None:
     assert len(page.data) == 1
     assert page.data[0].text == "Great post!"
     assert page.data[0].capabilities.can_reply is True
+    # platform_id is the comment identifier (no id field)
+    assert page.data[0].platform_id == "17890099999"
+    assert page.data[0].has_replies is True
+    assert page.data[0].moderation_status == "published"
+
+
+def test_list_post_comments_with_filters(httpx_mock, client) -> None:
+    """Verify moderation_status, order, q params are passed."""
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/inbox/comments/ip_001?account_id=acc_ig_001&moderation_status=published&order=recent&q=hello",
+        json={"data": [COMMENT_JSON], "pagination": {"has_more": False, "next_cursor": None}},
+    )
+    page = client.comments.list(
+        "ip_001",
+        account_id="acc_ig_001",
+        moderation_status="published",
+        order="recent",
+        q="hello",
+    )
+    assert len(page.data) == 1
 
 
 def test_reply_to_comment(httpx_mock, client) -> None:
@@ -179,6 +213,7 @@ async def test_list_post_comments_async(httpx_mock, async_client) -> None:
     page = await async_client.comments.list("ip_001", account_id="acc_ig_001")
     assert len(page.data) == 1
     assert page.data[0].author_name == "Jane Doe"
+    assert page.data[0].platform_id == "17890099999"
 
 
 async def test_list_post_comments_async_with_pagination(httpx_mock, async_client) -> None:
@@ -188,6 +223,22 @@ async def test_list_post_comments_async_with_pagination(httpx_mock, async_client
     )
     page = await async_client.comments.list("ip_001", account_id="acc_ig_001", limit=5, cursor="cc")
     assert len(page.data) == 1
+
+
+async def test_list_post_comments_async_with_filters(httpx_mock, async_client) -> None:
+    """Verify moderation_status, order, q passed through async list."""
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/inbox/comments/ip_001?account_id=acc_ig_001&moderation_status=held_for_review&order=relevance&q=spam",
+        json={"data": [], "pagination": {"has_more": False, "next_cursor": None}},
+    )
+    page = await async_client.comments.list(
+        "ip_001",
+        account_id="acc_ig_001",
+        moderation_status="held_for_review",
+        order="relevance",
+        q="spam",
+    )
+    assert len(page.data) == 0
 
 
 async def test_reply_async(httpx_mock, async_client) -> None:

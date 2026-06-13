@@ -258,3 +258,40 @@ async def test_async_cursor_page_len(httpx_mock) -> None:
     page = await client.posts.list()
     assert len(page) == 3
     await client.close()
+
+
+# ---------------------------------------------------------------------------
+# TDD: top-level next_cursor envelope (Fix 3)
+# ---------------------------------------------------------------------------
+
+
+def test_top_level_next_cursor_envelope(httpx_mock) -> None:
+    """Detect the {data: [...], next_cursor: str} top-level envelope shape (Mentions)."""
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/posts",
+        json={
+            "data": [_post_json("p1")],
+            "next_cursor": "c2",
+        },
+    )
+    client = SocialAPI(api_key=TEST_API_KEY, base_url=BASE_URL, max_retries=0)
+    page = client.posts.list()
+    assert page.next_cursor == "c2"
+    assert page.has_more is True
+    client.close()
+
+
+async def test_async_top_level_next_cursor_envelope(httpx_mock) -> None:
+    """Async client detects the {data: [...], next_cursor: str} top-level envelope shape."""
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/posts",
+        json={
+            "data": [_post_json("p1")],
+            "next_cursor": "c2",
+        },
+    )
+    client = AsyncSocialAPI(api_key=TEST_API_KEY, base_url=BASE_URL, max_retries=0)
+    page = await client.posts.list()
+    assert page.next_cursor == "c2"
+    assert page.has_more is True
+    await client.close()

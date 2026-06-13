@@ -109,3 +109,132 @@ class UpdateWebhookRequest(BaseModel):
     url: str | None = None
     events: list[str] | None = None
     is_active: bool | None = None
+
+
+# ---------------------------------------------------------------------------
+# Webhook detail models
+# ---------------------------------------------------------------------------
+
+
+class DeliveryStatBucket(BaseModel):
+    """Aggregated delivery counts for a time window."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    delivered: int
+    failed: int
+
+
+class WebhookStats(BaseModel):
+    """Delivery statistics for a webhook endpoint."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    last_24h: DeliveryStatBucket
+    last_7d: DeliveryStatBucket
+
+
+class WebhookDetail(BaseModel):
+    """Full webhook endpoint record including stats (response for GET /v1/webhooks/:id)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    url: str
+    events: list[str]
+    is_active: bool
+    secret_hint: str
+    created_at: str
+    stats: WebhookStats
+
+
+# ---------------------------------------------------------------------------
+# Webhook events catalog
+# ---------------------------------------------------------------------------
+
+
+class WebhookEventInfo(BaseModel):
+    """A single entry from the webhook event type catalog."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    event: str
+    description: str
+    category: str
+
+
+# ---------------------------------------------------------------------------
+# Delivery list / detail models
+# ---------------------------------------------------------------------------
+
+
+class DeliveryListItem(BaseModel):
+    """A single row in the delivery list response."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    event_type: str
+    status: str
+    response_status_code: int | None = None
+    response_duration_ms: int | None = None
+    attempt_count: int
+    description: str
+    created_at: str
+
+
+class DeliveryAttempt(BaseModel):
+    """A single attempt record within a delivery."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    attempt_number: int
+    status_code: int | None = None
+    response_body: str
+    duration_ms: int
+    error_message: str = ""
+    created_at: str
+
+
+class DeliveryDetail(BaseModel):
+    """Full delivery record including payload and all attempts."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    endpoint_id: str
+    event_type: str
+    status: str
+    response_status_code: int | None = None
+    response_duration_ms: int | None = None
+    attempt_count: int
+    description: str
+    payload: Any
+    attempts: list[DeliveryAttempt]
+    created_at: str
+
+
+# ---------------------------------------------------------------------------
+# Test delivery
+# ---------------------------------------------------------------------------
+
+
+class TestWebhookRequest(BaseModel):
+    """Request body for ``POST /v1/webhooks/:id/test``."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    event_type: str
+    payload: Any
+
+
+class TestDeliveryResponse(BaseModel):
+    """Response from ``POST /v1/webhooks/:id/test``."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    delivery_id: str
+    status: str
+    response_status_code: int
+    response_body: str
+    response_duration_ms: int

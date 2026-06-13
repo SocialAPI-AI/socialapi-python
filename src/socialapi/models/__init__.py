@@ -4,6 +4,7 @@ from socialapi.models.accounts import (
     Account,
     AsyncAccount,
     AsyncPage,
+    Board,
     ConnectAccountRequest,
     ConnectAccountResponse,
     ConnectOAuthResponse,
@@ -32,6 +33,7 @@ from socialapi.models.conversations import (
     SendMessageResponse,
     UpdateConversationRequest,
 )
+from socialapi.models.events import Event, EventList, EventsSummary
 from socialapi.models.exports import (
     AsyncExport,
     CreateExportRequest,
@@ -55,15 +57,20 @@ from socialapi.models.oauth import (
 )
 from socialapi.models.posts import (
     AsyncPost,
+    DeletePostResponse,
     Post,
     PostMetrics,
     PostTarget,
     PostTargetError,
     PostTargetMetrics,
+    TargetDeleteOutcome,
     ValidationIssue,
     ValidationResult,
 )
 from socialapi.models.publishing import (
+    ConstraintsCarousel,
+    ConstraintsMedia,
+    ConstraintsText,
     CreatePostRequest,
     ImportPostsResponse,
     ImportRowError,
@@ -77,10 +84,12 @@ from socialapi.models.publishing import (
 )
 from socialapi.models.reviews import (
     AsyncReview,
+    FailedAccount,
     ReplyToReviewRequest,
     ReplyToReviewResponse,
     Review,
-    UpdateReviewReplyRequest,
+    ReviewFanoutMeta,
+    ReviewList,
 )
 from socialapi.models.usage import AccountLimits, UsageResponse
 from socialapi.models.users import UpdateUserRequest, User
@@ -88,17 +97,31 @@ from socialapi.models.webhooks import (
     AsyncWebhook,
     CreateWebhookRequest,
     CreateWebhookResponse,
+    DeliveryAttempt,
+    DeliveryDetail,
+    DeliveryListItem,
+    DeliveryStatBucket,
+    TestDeliveryResponse,
+    TestWebhookRequest,
     UpdateWebhookRequest,
     Webhook,
+    WebhookDetail,
+    WebhookEventInfo,
+    WebhookStats,
 )
+from socialapi.models.youtube import YouTubeChannelSummary
 
-__all__: list[str] = [
+__all__: list[str] = [  # noqa: RUF022
     # keys
     "APIKey",
     # accounts
     "Account",
     # usage
     "AccountLimits",
+    # events
+    "Event",
+    "EventList",
+    "EventsSummary",
     "AsyncAPIKey",
     "AsyncAccount",
     "AsyncBrand",
@@ -114,6 +137,8 @@ __all__: list[str] = [
     "AsyncPost",
     "AsyncReview",
     "AsyncWebhook",
+    # boards
+    "Board",
     # brands
     "Brand",
     # comments
@@ -122,6 +147,10 @@ __all__: list[str] = [
     "ConnectAccountRequest",
     "ConnectAccountResponse",
     "ConnectOAuthResponse",
+    # constraints sub-models
+    "ConstraintsCarousel",
+    "ConstraintsMedia",
+    "ConstraintsText",
     # conversations
     "Conversation",
     "CreateBrandRequest",
@@ -135,6 +164,8 @@ __all__: list[str] = [
     "CreateWebhookRequest",
     "CreateWebhookResponse",
     "CreatorInfo",
+    # posts delete response
+    "DeletePostResponse",
     # exports
     "Export",
     "ExportVideo",
@@ -170,19 +201,22 @@ __all__: list[str] = [
     "PrivateReplyRequest",
     "ReplyToCommentRequest",
     "ReplyToCommentResponse",
+    "FailedAccount",
     "ReplyToReviewRequest",
     "ReplyToReviewResponse",
     # reviews
     "Review",
+    "ReviewFanoutMeta",
+    "ReviewList",
     "SendMessageRequest",
     "SendMessageResponse",
     "StorageUsage",
+    "TargetDeleteOutcome",
     "TargetRequest",
     "UnpublishRequest",
     "UpdateBrandRequest",
     "UpdateConversationRequest",
     "UpdatePostRequest",
-    "UpdateReviewReplyRequest",
     "UpdateUserRequest",
     "UpdateWebhookRequest",
     "UsageResponse",
@@ -191,6 +225,17 @@ __all__: list[str] = [
     "ValidatePostRequest",
     "ValidationIssue",
     "ValidationResult",
+    # youtube
+    "YouTubeChannelSummary",
     # webhooks
     "Webhook",
+    "WebhookDetail",
+    "WebhookStats",
+    "DeliveryStatBucket",
+    "WebhookEventInfo",
+    "DeliveryListItem",
+    "DeliveryAttempt",
+    "DeliveryDetail",
+    "TestWebhookRequest",
+    "TestDeliveryResponse",
 ]

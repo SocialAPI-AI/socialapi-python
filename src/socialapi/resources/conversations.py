@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from socialapi.models.conversations import (
     AsyncConversation,
@@ -27,7 +27,7 @@ class Conversations:
         *,
         account_id: str | None = None,
         platform: str | None = None,
-        status: str | None = None,
+        status: Literal["active", "archived"] | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
@@ -60,7 +60,7 @@ class Conversations:
         self,
         conversation_id: str,
         *,
-        status: str,
+        status: Literal["active", "archived"],
         timeout: float | None = None,
     ) -> Conversation:
         data = self._client._patch(
@@ -99,11 +99,13 @@ class Conversations:
         conversation_id: str,
         *,
         account_id: str,
-        text: str,
+        text: str | None = None,
         attachment_url: str | None = None,
         timeout: float | None = None,
     ) -> SendMessageResponse:
-        body: dict[str, Any] = {"account_id": account_id, "text": text}
+        body: dict[str, Any] = {"account_id": account_id}
+        if text is not None:
+            body["text"] = text
         if attachment_url is not None:
             body["attachment_url"] = attachment_url
         data = self._client._post(
@@ -130,7 +132,7 @@ class AsyncConversations:
         *,
         account_id: str | None = None,
         platform: str | None = None,
-        status: str | None = None,
+        status: Literal["active", "archived"] | None = None,
         limit: int | None = None,
         cursor: str | None = None,
         timeout: float | None = None,
@@ -163,7 +165,7 @@ class AsyncConversations:
         self,
         conversation_id: str,
         *,
-        status: str,
+        status: Literal["active", "archived"],
         timeout: float | None = None,
     ) -> AsyncConversation:
         data = await self._client._patch(
@@ -202,11 +204,13 @@ class AsyncConversations:
         conversation_id: str,
         *,
         account_id: str,
-        text: str,
+        text: str | None = None,
         attachment_url: str | None = None,
         timeout: float | None = None,
     ) -> SendMessageResponse:
-        body: dict[str, Any] = {"account_id": account_id, "text": text}
+        body: dict[str, Any] = {"account_id": account_id}
+        if text is not None:
+            body["text"] = text
         if attachment_url is not None:
             body["attachment_url"] = attachment_url
         data = await self._client._post(

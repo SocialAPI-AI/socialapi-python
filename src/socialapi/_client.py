@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from socialapi.resources.brands import AsyncBrands, Brands
     from socialapi.resources.comments import AsyncComments, Comments
     from socialapi.resources.conversations import AsyncConversations, Conversations
+    from socialapi.resources.events import AsyncEvents, Events
     from socialapi.resources.exports import AsyncExports, Exports
     from socialapi.resources.invites import AsyncInvites, Invites
     from socialapi.resources.keys import AsyncKeys, Keys
@@ -35,6 +36,7 @@ if TYPE_CHECKING:
     from socialapi.resources.usage import AsyncUsage, Usage
     from socialapi.resources.users import AsyncUsers, Users
     from socialapi.resources.webhooks import AsyncWebhooks, Webhooks
+    from socialapi.resources.youtube import AsyncYouTube, YouTube
 
 
 def _resolve_api_key(api_key: str | None) -> str:
@@ -73,6 +75,7 @@ class SocialAPI:
     brands: Brands
     comments: Comments
     conversations: Conversations
+    events: Events
     exports: Exports
     invites: Invites
     keys: Keys
@@ -85,6 +88,7 @@ class SocialAPI:
     usage: Usage
     users: Users
     webhooks: Webhooks
+    youtube: YouTube
 
     def __init__(
         self,
@@ -112,6 +116,7 @@ class SocialAPI:
         from socialapi.resources.brands import Brands as _Brands
         from socialapi.resources.comments import Comments as _Comments
         from socialapi.resources.conversations import Conversations as _Conversations
+        from socialapi.resources.events import Events as _Events
         from socialapi.resources.exports import Exports as _Exports
         from socialapi.resources.invites import Invites as _Invites
         from socialapi.resources.keys import Keys as _Keys
@@ -124,11 +129,13 @@ class SocialAPI:
         from socialapi.resources.usage import Usage as _Usage
         from socialapi.resources.users import Users as _Users
         from socialapi.resources.webhooks import Webhooks as _Webhooks
+        from socialapi.resources.youtube import YouTube as _YouTube
 
         self.accounts = _Accounts(self._client)
         self.brands = _Brands(self._client)
         self.comments = _Comments(self._client)
         self.conversations = _Conversations(self._client)
+        self.events = _Events(self._client)
         self.exports = _Exports(self._client)
         self.invites = _Invites(self._client)
         self.keys = _Keys(self._client)
@@ -141,6 +148,7 @@ class SocialAPI:
         self.usage = _Usage(self._client)
         self.users = _Users(self._client)
         self.webhooks = _Webhooks(self._client)
+        self.youtube = _YouTube(self._client)
 
     def with_options(
         self,
@@ -180,6 +188,7 @@ class AsyncSocialAPI:
     brands: AsyncBrands
     comments: AsyncComments
     conversations: AsyncConversations
+    events: AsyncEvents
     exports: AsyncExports
     invites: AsyncInvites
     keys: AsyncKeys
@@ -192,6 +201,7 @@ class AsyncSocialAPI:
     usage: AsyncUsage
     users: AsyncUsers
     webhooks: AsyncWebhooks
+    youtube: AsyncYouTube
 
     def __init__(
         self,
@@ -219,6 +229,7 @@ class AsyncSocialAPI:
         from socialapi.resources.brands import AsyncBrands as _AsyncBrands
         from socialapi.resources.comments import AsyncComments as _AsyncComments
         from socialapi.resources.conversations import AsyncConversations as _AsyncConversations
+        from socialapi.resources.events import AsyncEvents as _AsyncEvents
         from socialapi.resources.exports import AsyncExports as _AsyncExports
         from socialapi.resources.invites import AsyncInvites as _AsyncInvites
         from socialapi.resources.keys import AsyncKeys as _AsyncKeys
@@ -231,11 +242,13 @@ class AsyncSocialAPI:
         from socialapi.resources.usage import AsyncUsage as _AsyncUsage
         from socialapi.resources.users import AsyncUsers as _AsyncUsers
         from socialapi.resources.webhooks import AsyncWebhooks as _AsyncWebhooks
+        from socialapi.resources.youtube import AsyncYouTube as _AsyncYouTube
 
         self.accounts = _AsyncAccounts(self._client)
         self.brands = _AsyncBrands(self._client)
         self.comments = _AsyncComments(self._client)
         self.conversations = _AsyncConversations(self._client)
+        self.events = _AsyncEvents(self._client)
         self.exports = _AsyncExports(self._client)
         self.invites = _AsyncInvites(self._client)
         self.keys = _AsyncKeys(self._client)
@@ -248,6 +261,7 @@ class AsyncSocialAPI:
         self.usage = _AsyncUsage(self._client)
         self.users = _AsyncUsers(self._client)
         self.webhooks = _AsyncWebhooks(self._client)
+        self.youtube = _AsyncYouTube(self._client)
 
     def with_options(
         self,

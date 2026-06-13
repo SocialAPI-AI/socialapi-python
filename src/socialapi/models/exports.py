@@ -8,31 +8,54 @@ from pydantic import BaseModel, ConfigDict
 from socialapi._bound import _Bound
 
 
+class ExportResult(BaseModel):
+    """Download URLs returned when an export completes successfully.
+
+    Maps to ``ExportResultURLs`` in the Go types. Both fields use omitempty
+    so either may be absent.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    excel_url: str | None = None
+    report_url: str | None = None
+
+
 class _ExportBase(_Bound):
     """Shared fields for Export / AsyncExport.
 
-    The OpenAPI spec returns a free-form object for export endpoints; the SDK
-    captures common fields (``id``, ``status``, ``progress``, ``download_url``,
-    ``report_url``) and tolerates extras.
+    Maps to ``ExportItem`` (list) and ``ExportStatusResponse`` (detail) in the
+    Go endpoint types.
     """
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
     id: str | None = None
     account_id: str | None = None
+    platform: str | None = None
     status: str | None = None
-    progress: float | None = None
-    download_url: str | None = None
-    report_url: str | None = None
+    total_videos: int | None = None
+    processed_videos: int | None = None
+    error: str | None = None
     created_at: datetime | None = None
     completed_at: datetime | None = None
+    expires_at: datetime | None = None
+    # Result block present only on a completed GET /v1/exports/{id} response
+    result: ExportResult | None = None
 
 
 class Export(_ExportBase):
     """An analytics export job (sync)."""
 
     def refresh(self, *, timeout: float | None = None) -> Export:
-        """Re-fetch the export by ID to get fresh status / progress."""
+        """Re-fetch the export by ID to get fresh status / result.
+
+        Returns:
+            A new Export bound to the same client.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_sync()
         export_id = self.id or self._ctx_value("export_id")
         data = client._get(f"/v1/exports/{export_id}", timeout=timeout)
@@ -41,9 +64,17 @@ class Export(_ExportBase):
         return updated
 
     def list_videos(self, *, timeout: float | None = None) -> list[ExportVideo]:
+        """List videos for this completed export.
+
+        Returns:
+            A list of ExportVideo objects.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_sync()
         export_id = self.id or self._ctx_value("export_id")
-        data = client._get(f"/exports/{export_id}/videos", timeout=timeout)
+        data = client._get(f"/v1/exports/{export_id}/videos", timeout=timeout)
         raw_items: list[Any] = data.get("data", [])
         return [ExportVideo.model_validate(item) for item in raw_items]
 
@@ -52,6 +83,14 @@ class AsyncExport(_ExportBase):
     """An analytics export job (async)."""
 
     async def refresh(self, *, timeout: float | None = None) -> AsyncExport:
+        """Re-fetch the export by ID to get fresh status / result.
+
+        Returns:
+            A new AsyncExport bound to the same client.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_async()
         export_id = self.id or self._ctx_value("export_id")
         data = await client._get(f"/v1/exports/{export_id}", timeout=timeout)
@@ -60,15 +99,23 @@ class AsyncExport(_ExportBase):
         return updated
 
     async def list_videos(self, *, timeout: float | None = None) -> list[ExportVideo]:
+        """List videos for this completed export.
+
+        Returns:
+            A list of ExportVideo objects.
+
+        Raises:
+            UnboundModelError: If the model is not bound to a client.
+        """
         client = self._client_or_raise_async()
         export_id = self.id or self._ctx_value("export_id")
-        data = await client._get(f"/exports/{export_id}/videos", timeout=timeout)
+        data = await client._get(f"/v1/exports/{export_id}/videos", timeout=timeout)
         raw_items: list[Any] = data.get("data", [])
         return [ExportVideo.model_validate(item) for item in raw_items]
 
 
 class ExportVideo(BaseModel):
-    """A video record returned by ``GET /exports/:id/videos`` (untyped in spec)."""
+    """A video record returned by ``GET /v1/exports/:id/videos`` (untyped in spec)."""
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
@@ -83,5 +130,5 @@ class CreateExportRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    include_transcript: bool | None = None
-    include_vision: bool | None = None
+    include_transcript: bool = False
+    include_vision: bool = False

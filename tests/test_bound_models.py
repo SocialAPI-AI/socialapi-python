@@ -39,8 +39,6 @@ BRAND_JSON = {
 }
 
 COMMENT_JSON = {
-    "id": "cmt_001",
-    "inbox_post_id": "ip_001",
     "platform_id": "17890099999",
     "platform": "instagram",
     "text": "Great post!",
@@ -49,8 +47,8 @@ COMMENT_JSON = {
     "is_owner": False,
     "like_count": 0,
     "reply_count": 0,
+    "has_replies": False,
     "is_hidden": False,
-    "is_liked": False,
     "created_at": "2026-03-20T11:00:00Z",
     "capabilities": {
         "can_reply": True,
@@ -234,8 +232,9 @@ def test_comment_reply_via_bound_method(httpx_mock, client: SocialAPI) -> None:
     )
     page = client.comments.list("ip_001", account_id="acc_001")
     comment = page.data[0]
-    # ctx was seeded by list()
+    # ctx was seeded by list(); platform_id is the comment identifier
     assert comment._ctx == {"account_id": "acc_001", "inbox_post_id": "ip_001"}
+    assert comment.platform_id == "17890099999"
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/inbox/comments/ip_001",
         json={"success": True, "comment_id": "new_cmt"},
@@ -250,8 +249,9 @@ def test_comment_hide_via_bound_method(httpx_mock, client: SocialAPI) -> None:
         json={"data": [COMMENT_JSON], "pagination": {"has_more": False, "next_cursor": None}},
     )
     page = client.comments.list("ip_001", account_id="acc_001")
+    # URL uses platform_id (17890099999), not a DB id
     httpx_mock.add_response(
-        url=f"{BASE_URL}/v1/inbox/comments/ip_001/cmt_001/hide",
+        url=f"{BASE_URL}/v1/inbox/comments/ip_001/17890099999/hide",
         method="POST",
         status_code=200,
         json={"success": True},
@@ -283,6 +283,7 @@ def test_commented_post_list_comments_propagates_ctx(httpx_mock, client: SocialA
         "platform_id": "17890",
         "comment_count": 5,
         "like_count": 0,
+        "published_at": None,
         "created_at": "2026-03-20T10:00:00Z",
         "updated_at": "2026-03-20T10:00:00Z",
     }
@@ -296,9 +297,10 @@ def test_commented_post_list_comments_propagates_ctx(httpx_mock, client: SocialA
         json={"data": [COMMENT_JSON], "pagination": {"has_more": False, "next_cursor": None}},
     )
     sub_page = posts.data[0].list_comments()
-    # ctx propagated to children
+    # ctx propagated to children; platform_id is the comment identifier
     assert sub_page.data[0]._ctx["account_id"] == "acc_001"
     assert sub_page.data[0]._ctx["inbox_post_id"] == "ip_001"
+    assert sub_page.data[0].platform_id == "17890099999"
 
 
 # ---------------------------------------------------------------------------
@@ -358,9 +360,11 @@ def test_post_delete_via_bound_method(httpx_mock, client: SocialAPI) -> None:
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/posts/post_001",
         method="DELETE",
-        status_code=204,
+        json={"success": True, "deleted": True, "results": []},
     )
-    post.delete()
+    result = post.delete()
+    assert result.success is True
+    assert result.deleted is True
 
 
 def test_post_get_metrics_via_bound_method(httpx_mock, client: SocialAPI) -> None:
@@ -382,14 +386,17 @@ def test_post_get_metrics_via_bound_method(httpx_mock, client: SocialAPI) -> Non
 def test_review_reply_via_bound_method(httpx_mock, client: SocialAPI) -> None:
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/inbox/reviews",
-        json={"data": [REVIEW_JSON], "pagination": {"has_more": False, "next_cursor": None}},
+        json={
+            "data": [REVIEW_JSON],
+            "meta": {"accounts_queried": 1, "accounts_failed": 0, "failed_accounts": []},
+        },
     )
-    page = client.reviews.list()
+    result_list = client.reviews.list()
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/inbox/reviews/rev_001/reply",
         json={"success": True, "reply_id": "rep_001"},
     )
-    result = page.data[0].reply(text="Thanks!")
+    result = result_list.data[0].reply(text="Thanks!")
     assert result.reply_id == "rep_001"
 
 
@@ -439,13 +446,13 @@ def test_apikey_revoke_via_bound_method(httpx_mock, client: SocialAPI) -> None:
 
 def test_media_delete_via_bound_method(httpx_mock, client: SocialAPI) -> None:
     httpx_mock.add_response(url=f"{BASE_URL}/v1/media", json={"data": [MEDIA_JSON]})
-    items = client.media.list()
+    page = client.media.list()
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/media/med_001",
         method="DELETE",
         status_code=204,
     )
-    items[0].delete()
+    page.data[0].delete()
 
 
 def test_invite_revoke_via_bound_method(httpx_mock, client: SocialAPI) -> None:
@@ -533,6 +540,8 @@ def test_account_get_limits_via_bound_method(httpx_mock, client: SocialAPI) -> N
 
 
 def test_account_export_via_bound_method(httpx_mock, client: SocialAPI) -> None:
+    from socialapi.models.exports import Export
+
     httpx_mock.add_response(
         url=f"{BASE_URL}/v1/accounts",
         json={"data": [ACCOUNT_JSON], "pagination": {"has_more": False, "next_cursor": None}},
@@ -542,10 +551,73 @@ def test_account_export_via_bound_method(httpx_mock, client: SocialAPI) -> None:
         url=f"{BASE_URL}/v1/accounts/acc_001/export",
         method="POST",
         status_code=202,
-        json={"export_id": "exp_001", "status": "pending"},
+        json={"id": "exp_001", "status": "pending"},
     )
     result = page.data[0].export(include_transcript=True)
-    assert result == {"export_id": "exp_001", "status": "pending"}
+    assert isinstance(result, Export)
+    assert result.id == "exp_001"
+    assert result.status == "pending"
+
+
+# ---------------------------------------------------------------------------
+# Account list_boards bound method
+# ---------------------------------------------------------------------------
+
+
+def test_account_list_boards_via_bound_method(httpx_mock, client: SocialAPI) -> None:
+    from socialapi.models.accounts import Board
+
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts",
+        json={"data": [ACCOUNT_JSON], "pagination": {"has_more": False, "next_cursor": None}},
+    )
+    page = client.accounts.list()
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_001/boards",
+        json={"data": [{"id": "board_001", "name": "My Board", "privacy": "PUBLIC"}]},
+    )
+    boards = page.data[0].list_boards()
+    assert len(boards) == 1
+    assert isinstance(boards[0], Board)
+    assert boards[0].id == "board_001"
+
+
+async def test_async_account_list_boards_via_bound_method(httpx_mock, async_client: AsyncSocialAPI) -> None:
+    from socialapi.models.accounts import Board
+
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts",
+        json={"data": [ACCOUNT_JSON], "pagination": {"has_more": False, "next_cursor": None}},
+    )
+    page = await async_client.accounts.list()
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_001/boards",
+        json={"data": [{"id": "board_002", "name": "Board 2", "privacy": "SECRET"}]},
+    )
+    boards = await page.data[0].list_boards()
+    assert len(boards) == 1
+    assert isinstance(boards[0], Board)
+    assert boards[0].name == "Board 2"
+
+
+def test_account_export_bound_returns_export(httpx_mock, client: SocialAPI) -> None:
+    """Account.export() returns an Export model (not dict)."""
+    from socialapi.models.exports import Export
+
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts",
+        json={"data": [ACCOUNT_JSON], "pagination": {"has_more": False, "next_cursor": None}},
+    )
+    page = client.accounts.list()
+    httpx_mock.add_response(
+        url=f"{BASE_URL}/v1/accounts/acc_001/export",
+        method="POST",
+        status_code=202,
+        json={"id": "exp_bound_001", "status": "pending"},
+    )
+    result = page.data[0].export()
+    assert isinstance(result, Export)
+    assert result.id == "exp_bound_001"
 
 
 # ---------------------------------------------------------------------------
