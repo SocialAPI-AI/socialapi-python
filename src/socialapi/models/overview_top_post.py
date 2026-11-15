@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.platform import Platform
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
@@ -22,9 +24,9 @@ class OverviewTopPost:
         account_id (str):  Example: acc_01HZ9X3Q4R5M6N7P8V2K0W1J.
         media_type (str):  Example: reel.
         metrics (OverviewPostMetrics):
-        platform (str):  Example: instagram.
+        platform (Platform):
         post_id (str):  Example: 7c9e6679-7425-40de-944b-e07fc1f90ae7.
-        published_at (str):  Example: 2026-10-14T09:30:00Z.
+        published_at (datetime.datetime):  Example: 2026-10-14T09:30:00Z.
         permalink (str | Unset):  Example: https://www.instagram.com/p/C1a2b3c4d5/.
         text (str | Unset):  Example: Our autumn menu is here.
         thumbnail (str | Unset):  Example: https://scontent.cdninstagram.com/v/t51.29350-15/456_n.jpg.
@@ -33,9 +35,9 @@ class OverviewTopPost:
     account_id: str
     media_type: str
     metrics: OverviewPostMetrics
-    platform: str
+    platform: Platform
     post_id: str
-    published_at: str
+    published_at: datetime.datetime
     permalink: str | Unset = UNSET
     text: str | Unset = UNSET
     thumbnail: str | Unset = UNSET
@@ -48,11 +50,11 @@ class OverviewTopPost:
 
         metrics = self.metrics.to_dict()
 
-        platform = self.platform
+        platform = self.platform.value
 
         post_id = self.post_id
 
-        published_at = self.published_at
+        published_at = self.published_at.isoformat()
 
         permalink = self.permalink
 
@@ -92,11 +94,11 @@ class OverviewTopPost:
 
         metrics = OverviewPostMetrics.from_dict(d.pop("metrics"))
 
-        platform = d.pop("platform")
+        platform = Platform(d.pop("platform"))
 
         post_id = d.pop("post_id")
 
-        published_at = d.pop("published_at")
+        published_at = datetime.datetime.fromisoformat(d.pop("published_at"))
 
         permalink = d.pop("permalink", UNSET)
 

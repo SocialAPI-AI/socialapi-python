@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -22,7 +23,7 @@ class InboxMessage:
         attachment_type (None | str):
         attachment_url (None | str):
         conversation_id (str):
-        created_at (str):
+        created_at (datetime.datetime):
         direction (str):
         id (str):
         platform_id (str):
@@ -31,13 +32,13 @@ class InboxMessage:
         sender_name (str):
         text (None | str):
         status (str | Unset):
-        status_updated_at (str | Unset):
+        status_updated_at (datetime.datetime | Unset):
     """
 
     attachment_type: None | str
     attachment_url: None | str
     conversation_id: str
-    created_at: str
+    created_at: datetime.datetime
     direction: str
     id: str
     platform_id: str
@@ -46,7 +47,7 @@ class InboxMessage:
     sender_name: str
     text: None | str
     status: str | Unset = UNSET
-    status_updated_at: str | Unset = UNSET
+    status_updated_at: datetime.datetime | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,7 +61,7 @@ class InboxMessage:
 
         conversation_id = self.conversation_id
 
-        created_at = self.created_at
+        created_at = self.created_at.isoformat()
 
         direction = self.direction
 
@@ -83,7 +84,9 @@ class InboxMessage:
 
         status = self.status
 
-        status_updated_at = self.status_updated_at
+        status_updated_at: str | Unset = UNSET
+        if not isinstance(self.status_updated_at, Unset):
+            status_updated_at = self.status_updated_at.isoformat()
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -131,7 +134,7 @@ class InboxMessage:
 
         conversation_id = d.pop("conversation_id")
 
-        created_at = d.pop("created_at")
+        created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
 
         direction = d.pop("direction")
 
@@ -167,7 +170,12 @@ class InboxMessage:
 
         status = d.pop("status", UNSET)
 
-        status_updated_at = d.pop("status_updated_at", UNSET)
+        _status_updated_at = d.pop("status_updated_at", UNSET)
+        status_updated_at: datetime.datetime | Unset
+        if isinstance(_status_updated_at, Unset):
+            status_updated_at = UNSET
+        else:
+            status_updated_at = datetime.datetime.fromisoformat(_status_updated_at)
 
         inbox_message = cls(
             attachment_type=attachment_type,

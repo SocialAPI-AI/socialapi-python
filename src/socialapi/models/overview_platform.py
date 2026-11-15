@@ -6,6 +6,8 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.platform import Platform
+
 T = TypeVar("T", bound="OverviewPlatform")
 
 
@@ -16,7 +18,7 @@ class OverviewPlatform:
         comments (int):  Example: 412.
         engagements (int):  Example: 3810.
         likes (int):  Example: 3120.
-        platform (str):  Example: instagram.
+        platform (Platform):
         posts (int):  Example: 42.
         saves (int):  Example: 77.
         shares (int):  Example: 201.
@@ -26,7 +28,7 @@ class OverviewPlatform:
     comments: int
     engagements: int
     likes: int
-    platform: str
+    platform: Platform
     posts: int
     saves: int
     shares: int
@@ -40,7 +42,7 @@ class OverviewPlatform:
 
         likes = self.likes
 
-        platform = self.platform
+        platform = self.platform.value
 
         posts = self.posts
 
@@ -76,7 +78,7 @@ class OverviewPlatform:
 
         likes = d.pop("likes")
 
-        platform = d.pop("platform")
+        platform = Platform(d.pop("platform"))
 
         posts = d.pop("posts")
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -30,7 +31,7 @@ class Post:
         permalink (str): [platform: instagram, facebook, threads, tiktok, youtube, google, linkedin]
         platform (Platform):
         shares_count (int): [platform: facebook] Zero on other platforms
-        timestamp (str): [always]
+        timestamp (datetime.datetime): [always]
         view_count (int): [platform: youtube, tiktok] Zero on other platforms
         media_type (str | Unset): [platform: instagram, facebook, threads, tiktok, youtube] Empty on linkedin and google
         media_url (str | Unset): [platform: instagram, tiktok, youtube] Cover image or media URL; empty on facebook,
@@ -49,7 +50,7 @@ class Post:
     permalink: str
     platform: Platform
     shares_count: int
-    timestamp: str
+    timestamp: datetime.datetime
     view_count: int
     media_type: str | Unset = UNSET
     media_url: str | Unset = UNSET
@@ -75,7 +76,7 @@ class Post:
 
         shares_count = self.shares_count
 
-        timestamp = self.timestamp
+        timestamp = self.timestamp.isoformat()
 
         view_count = self.view_count
 
@@ -150,7 +151,7 @@ class Post:
 
         shares_count = d.pop("shares_count")
 
-        timestamp = d.pop("timestamp")
+        timestamp = datetime.datetime.fromisoformat(d.pop("timestamp"))
 
         view_count = d.pop("view_count")
 

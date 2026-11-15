@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,10 +18,10 @@ class InboxConversation:
     """
     Attributes:
         account_id (str):
-        created_at (str):
+        created_at (datetime.datetime):
         id (str):
         last_message (str):
-        last_message_at (None | str):
+        last_message_at (datetime.datetime | None):
         participant_id (str):
         participant_name (str):
         participant_picture (str):
@@ -28,16 +29,16 @@ class InboxConversation:
         platform_id (str):
         status (str):
         unread_count (int):
-        updated_at (str):
+        updated_at (datetime.datetime):
         user_id (str):
         page_id (str | Unset):
     """
 
     account_id: str
-    created_at: str
+    created_at: datetime.datetime
     id: str
     last_message: str
-    last_message_at: None | str
+    last_message_at: datetime.datetime | None
     participant_id: str
     participant_name: str
     participant_picture: str
@@ -45,7 +46,7 @@ class InboxConversation:
     platform_id: str
     status: str
     unread_count: int
-    updated_at: str
+    updated_at: datetime.datetime
     user_id: str
     page_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -53,14 +54,17 @@ class InboxConversation:
     def to_dict(self) -> dict[str, Any]:
         account_id = self.account_id
 
-        created_at = self.created_at
+        created_at = self.created_at.isoformat()
 
         id = self.id
 
         last_message = self.last_message
 
         last_message_at: None | str
-        last_message_at = self.last_message_at
+        if isinstance(self.last_message_at, datetime.datetime):
+            last_message_at = self.last_message_at.isoformat()
+        else:
+            last_message_at = self.last_message_at
 
         participant_id = self.participant_id
 
@@ -76,7 +80,7 @@ class InboxConversation:
 
         unread_count = self.unread_count
 
-        updated_at = self.updated_at
+        updated_at = self.updated_at.isoformat()
 
         user_id = self.user_id
 
@@ -112,16 +116,24 @@ class InboxConversation:
         d = dict(src_dict)
         account_id = d.pop("account_id")
 
-        created_at = d.pop("created_at")
+        created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
 
         id = d.pop("id")
 
         last_message = d.pop("last_message")
 
-        def _parse_last_message_at(data: object) -> None | str:
+        def _parse_last_message_at(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
-            return cast(None | str, data)
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                last_message_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return last_message_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None, data)
 
         last_message_at = _parse_last_message_at(d.pop("last_message_at"))
 
@@ -139,7 +151,7 @@ class InboxConversation:
 
         unread_count = d.pop("unread_count")
 
-        updated_at = d.pop("updated_at")
+        updated_at = datetime.datetime.fromisoformat(d.pop("updated_at"))
 
         user_id = d.pop("user_id")
 

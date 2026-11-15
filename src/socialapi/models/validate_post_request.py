@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.platform import Platform
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
@@ -33,7 +34,7 @@ class ValidatePostRequest:
         platform_data (ValidatePostRequestPlatformData | Unset): PlatformData passes platform-specific fields keyed by
             platform name (e.g. {"instagram": {"content_type": "feed"}}). Folded into each matching target; a target's own
             platform_data wins on conflicts.
-        platforms (list[str] | Unset): Platforms lists platform names to validate against (e.g. ["instagram",
+        platforms (list[Platform] | Unset): Platforms lists platform names to validate against (e.g. ["instagram",
             "linkedin"]).
         scheduled_at (datetime.datetime | Unset): ScheduledAt validates the schedule time (must be in the future, within
             platform limits). Example: 2026-04-01T10:00:00Z.
@@ -48,7 +49,7 @@ class ValidatePostRequest:
     media: list[MediaInput] | Unset = UNSET
     media_ids: list[str] | Unset = UNSET
     platform_data: ValidatePostRequestPlatformData | Unset = UNSET
-    platforms: list[str] | Unset = UNSET
+    platforms: list[Platform] | Unset = UNSET
     scheduled_at: datetime.datetime | Unset = UNSET
     segments: list[SegmentRequest] | Unset = UNSET
     targets: list[TargetRequest] | Unset = UNSET
@@ -77,7 +78,10 @@ class ValidatePostRequest:
 
         platforms: list[str] | Unset = UNSET
         if not isinstance(self.platforms, Unset):
-            platforms = self.platforms
+            platforms = []
+            for platforms_item_data in self.platforms:
+                platforms_item = platforms_item_data.value
+                platforms.append(platforms_item)
 
         scheduled_at: str | Unset = UNSET
         if not isinstance(self.scheduled_at, Unset):
@@ -151,7 +155,14 @@ class ValidatePostRequest:
         else:
             platform_data = ValidatePostRequestPlatformData.from_dict(_platform_data)
 
-        platforms = cast(list[str], d.pop("platforms", UNSET))
+        _platforms = d.pop("platforms", UNSET)
+        platforms: list[Platform] | Unset = UNSET
+        if _platforms is not UNSET:
+            platforms = []
+            for platforms_item_data in _platforms:
+                platforms_item = Platform(platforms_item_data)
+
+                platforms.append(platforms_item)
 
         _scheduled_at = d.pop("scheduled_at", UNSET)
         scheduled_at: datetime.datetime | Unset

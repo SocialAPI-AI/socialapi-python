@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -19,24 +20,24 @@ class Queue:
     Attributes:
         active (bool): False when the Queue is paused: no new post can join it. Example: True.
         brand_id (str): ID of the Brand the Queue belongs to.
-        created_at (str): When the Queue was created.
+        created_at (datetime.datetime): When the Queue was created.
         id (str): Queue ID. Example: que_01J9Z8Y7X6W5V4T3S2R1Q0P9N8.
         is_default (bool): True for the Brand's default Queue, the one queue_id "default" refers to. Example: True.
         name (str): Queue name. Example: Evenings.
         slots (list[Slot] | None): Weekly posting times, sorted by day (Monday first) then time.
         timezone (str): IANA timezone the slots are expressed in. Example: Europe/Paris.
-        updated_at (str): When the Queue was last changed.
+        updated_at (datetime.datetime): When the Queue was last changed.
     """
 
     active: bool
     brand_id: str
-    created_at: str
+    created_at: datetime.datetime
     id: str
     is_default: bool
     name: str
     slots: list[Slot] | None
     timezone: str
-    updated_at: str
+    updated_at: datetime.datetime
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,7 +45,7 @@ class Queue:
 
         brand_id = self.brand_id
 
-        created_at = self.created_at
+        created_at = self.created_at.isoformat()
 
         id = self.id
 
@@ -64,7 +65,7 @@ class Queue:
 
         timezone = self.timezone
 
-        updated_at = self.updated_at
+        updated_at = self.updated_at.isoformat()
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -93,7 +94,7 @@ class Queue:
 
         brand_id = d.pop("brand_id")
 
-        created_at = d.pop("created_at")
+        created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
 
         id = d.pop("id")
 
@@ -123,7 +124,7 @@ class Queue:
 
         timezone = d.pop("timezone")
 
-        updated_at = d.pop("updated_at")
+        updated_at = datetime.datetime.fromisoformat(d.pop("updated_at"))
 
         queue = cls(
             active=active,

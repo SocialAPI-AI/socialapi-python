@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -21,13 +22,13 @@ class MessagesListResponse:
     """
     Attributes:
         data (list[InboxMessage] | None):
-        last_synced_at (None | str):
+        last_synced_at (datetime.datetime | None):
         pagination (InboxPagination):
         sync_state (SyncState):
     """
 
     data: list[InboxMessage] | None
-    last_synced_at: None | str
+    last_synced_at: datetime.datetime | None
     pagination: InboxPagination
     sync_state: SyncState
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -44,7 +45,10 @@ class MessagesListResponse:
             data = self.data
 
         last_synced_at: None | str
-        last_synced_at = self.last_synced_at
+        if isinstance(self.last_synced_at, datetime.datetime):
+            last_synced_at = self.last_synced_at.isoformat()
+        else:
+            last_synced_at = self.last_synced_at
 
         pagination = self.pagination.to_dict()
 
@@ -90,10 +94,18 @@ class MessagesListResponse:
 
         data = _parse_data(d.pop("data"))
 
-        def _parse_last_synced_at(data: object) -> None | str:
+        def _parse_last_synced_at(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
-            return cast(None | str, data)
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                last_synced_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return last_synced_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None, data)
 
         last_synced_at = _parse_last_synced_at(d.pop("last_synced_at"))
 

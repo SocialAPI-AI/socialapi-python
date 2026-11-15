@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -25,7 +26,7 @@ class CommentWithCapabilities:
         author_picture (str):
         author_username (str):
         capabilities (CommentCapabilities):
-        created_at (str):
+        created_at (datetime.datetime):
         has_replies (bool):
         id (str): ID is the canonical SocialAPI interaction id (sapi_cmt_…). Prefer it over
             platform_id, which is retained for backward compatibility. Example:
@@ -55,7 +56,7 @@ class CommentWithCapabilities:
     author_picture: str
     author_username: str
     capabilities: CommentCapabilities
-    created_at: str
+    created_at: datetime.datetime
     has_replies: bool
     id: str
     is_hidden: bool
@@ -83,7 +84,7 @@ class CommentWithCapabilities:
 
         capabilities = self.capabilities.to_dict()
 
-        created_at = self.created_at
+        created_at = self.created_at.isoformat()
 
         has_replies = self.has_replies
 
@@ -161,7 +162,7 @@ class CommentWithCapabilities:
 
         capabilities = CommentCapabilities.from_dict(d.pop("capabilities"))
 
-        created_at = d.pop("created_at")
+        created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
 
         has_replies = d.pop("has_replies")
 

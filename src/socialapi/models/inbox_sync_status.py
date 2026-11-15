@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,17 +17,17 @@ class InboxSyncStatus:
     """
     Attributes:
         error (str):
-        finished_at (None | str):
-        last_synced_at (None | str):
-        started_at (None | str):
+        finished_at (datetime.datetime | None):
+        last_synced_at (datetime.datetime | None):
+        started_at (datetime.datetime | None):
         state (SyncState):
         synced (int): Synced is how many items the last completed sync brought in. Display only. Example: 12.
     """
 
     error: str
-    finished_at: None | str
-    last_synced_at: None | str
-    started_at: None | str
+    finished_at: datetime.datetime | None
+    last_synced_at: datetime.datetime | None
+    started_at: datetime.datetime | None
     state: SyncState
     synced: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -35,13 +36,22 @@ class InboxSyncStatus:
         error = self.error
 
         finished_at: None | str
-        finished_at = self.finished_at
+        if isinstance(self.finished_at, datetime.datetime):
+            finished_at = self.finished_at.isoformat()
+        else:
+            finished_at = self.finished_at
 
         last_synced_at: None | str
-        last_synced_at = self.last_synced_at
+        if isinstance(self.last_synced_at, datetime.datetime):
+            last_synced_at = self.last_synced_at.isoformat()
+        else:
+            last_synced_at = self.last_synced_at
 
         started_at: None | str
-        started_at = self.started_at
+        if isinstance(self.started_at, datetime.datetime):
+            started_at = self.started_at.isoformat()
+        else:
+            started_at = self.started_at
 
         state = self.state.value
 
@@ -67,24 +77,48 @@ class InboxSyncStatus:
         d = dict(src_dict)
         error = d.pop("error")
 
-        def _parse_finished_at(data: object) -> None | str:
+        def _parse_finished_at(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
-            return cast(None | str, data)
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                finished_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return finished_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None, data)
 
         finished_at = _parse_finished_at(d.pop("finished_at"))
 
-        def _parse_last_synced_at(data: object) -> None | str:
+        def _parse_last_synced_at(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
-            return cast(None | str, data)
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                last_synced_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return last_synced_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None, data)
 
         last_synced_at = _parse_last_synced_at(d.pop("last_synced_at"))
 
-        def _parse_started_at(data: object) -> None | str:
+        def _parse_started_at(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
-            return cast(None | str, data)
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                started_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return started_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None, data)
 
         started_at = _parse_started_at(d.pop("started_at"))
 

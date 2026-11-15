@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,15 +18,15 @@ class Story:
     Attributes:
         id (str): platform-native story id Example: 17901.
         media_url (str): downloadable media link Example: https://lookaside.fbsbx.com/ig_messaging_cdn/?asset_id=17901.
-        expires_at (str | Unset): when media_url stops working; omitted when it cannot be determined Example:
-            2026-09-12T14:03:00Z.
+        expires_at (datetime.datetime | Unset): when media_url stops working; omitted when it cannot be determined
+            Example: 2026-09-12T14:03:00Z.
         media_type (str | Unset): [platform: facebook] photo or video Example: photo.
         permalink (str | Unset): [platform: facebook] story permalink Example: https://facebook.com/stories/1784.
     """
 
     id: str
     media_url: str
-    expires_at: str | Unset = UNSET
+    expires_at: datetime.datetime | Unset = UNSET
     media_type: str | Unset = UNSET
     permalink: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -35,7 +36,9 @@ class Story:
 
         media_url = self.media_url
 
-        expires_at = self.expires_at
+        expires_at: str | Unset = UNSET
+        if not isinstance(self.expires_at, Unset):
+            expires_at = self.expires_at.isoformat()
 
         media_type = self.media_type
 
@@ -65,7 +68,12 @@ class Story:
 
         media_url = d.pop("media_url")
 
-        expires_at = d.pop("expires_at", UNSET)
+        _expires_at = d.pop("expires_at", UNSET)
+        expires_at: datetime.datetime | Unset
+        if isinstance(_expires_at, Unset):
+            expires_at = UNSET
+        else:
+            expires_at = datetime.datetime.fromisoformat(_expires_at)
 
         media_type = d.pop("media_type", UNSET)
 

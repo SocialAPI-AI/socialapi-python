@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,8 +17,8 @@ class FacebookAccountSummaryResponse:
         follower_count (int):
         interactions (int):
         net_follows (int):
-        period_end (str):
-        period_start (str):
+        period_end (datetime.datetime):
+        period_start (datetime.datetime):
         reach (int):
         views (int):
     """
@@ -25,8 +26,8 @@ class FacebookAccountSummaryResponse:
     follower_count: int
     interactions: int
     net_follows: int
-    period_end: str
-    period_start: str
+    period_end: datetime.datetime
+    period_start: datetime.datetime
     reach: int
     views: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -38,9 +39,9 @@ class FacebookAccountSummaryResponse:
 
         net_follows = self.net_follows
 
-        period_end = self.period_end
+        period_end = self.period_end.isoformat()
 
-        period_start = self.period_start
+        period_start = self.period_start.isoformat()
 
         reach = self.reach
 
@@ -71,9 +72,9 @@ class FacebookAccountSummaryResponse:
 
         net_follows = d.pop("net_follows")
 
-        period_end = d.pop("period_end")
+        period_end = datetime.datetime.fromisoformat(d.pop("period_end"))
 
-        period_start = d.pop("period_start")
+        period_start = datetime.datetime.fromisoformat(d.pop("period_start"))
 
         reach = d.pop("reach")
 

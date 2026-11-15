@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -22,7 +23,7 @@ class Automation:
     """
     Attributes:
         account_id (str):  Example: acc_01HZ9X3Q4R5M6N7P8V2K0W1J.
-        created_at (str):
+        created_at (datetime.datetime):
         failed_count (int): Actions that failed
         fired_count (int): Events the Automation ran against
         id (str):  Example: aut_01J9Z8Y7X6W5V4T3S2R1Q0P9N8.
@@ -32,13 +33,13 @@ class Automation:
         status (AutomationStatus):
         steps (list[Step]): Up to 10 Steps forming a graph. One must have the key "start"
         trigger (AutomationTrigger):
-        updated_at (str):
+        updated_at (datetime.datetime):
         post_ids (list[str] | Unset): Up to 100 platform post ids, each 1 to 100 characters, a comment must be on.
             Omitted means every post. Comment trigger only
     """
 
     account_id: str
-    created_at: str
+    created_at: datetime.datetime
     failed_count: int
     fired_count: int
     id: str
@@ -48,14 +49,14 @@ class Automation:
     status: AutomationStatus
     steps: list[Step]
     trigger: AutomationTrigger
-    updated_at: str
+    updated_at: datetime.datetime
     post_ids: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         account_id = self.account_id
 
-        created_at = self.created_at
+        created_at = self.created_at.isoformat()
 
         failed_count = self.failed_count
 
@@ -78,7 +79,7 @@ class Automation:
 
         trigger = self.trigger.value
 
-        updated_at = self.updated_at
+        updated_at = self.updated_at.isoformat()
 
         post_ids: list[str] | Unset = UNSET
         if not isinstance(self.post_ids, Unset):
@@ -114,7 +115,7 @@ class Automation:
         d = dict(src_dict)
         account_id = d.pop("account_id")
 
-        created_at = d.pop("created_at")
+        created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
 
         failed_count = d.pop("failed_count")
 
@@ -139,7 +140,7 @@ class Automation:
 
         trigger = AutomationTrigger(d.pop("trigger"))
 
-        updated_at = d.pop("updated_at")
+        updated_at = datetime.datetime.fromisoformat(d.pop("updated_at"))
 
         post_ids = cast(list[str], d.pop("post_ids", UNSET))
 

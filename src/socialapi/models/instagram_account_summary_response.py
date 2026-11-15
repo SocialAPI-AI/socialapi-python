@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -20,8 +21,8 @@ class InstagramAccountSummaryResponse:
         interactions (int):
         media_count (int):
         net_follows (int):
-        period_end (str):
-        period_start (str):
+        period_end (datetime.datetime):
+        period_start (datetime.datetime):
         picture_url (str):
         reach (int):
         username (str):
@@ -35,8 +36,8 @@ class InstagramAccountSummaryResponse:
     interactions: int
     media_count: int
     net_follows: int
-    period_end: str
-    period_start: str
+    period_end: datetime.datetime
+    period_start: datetime.datetime
     picture_url: str
     reach: int
     username: str
@@ -58,9 +59,9 @@ class InstagramAccountSummaryResponse:
 
         net_follows = self.net_follows
 
-        period_end = self.period_end
+        period_end = self.period_end.isoformat()
 
-        period_start = self.period_start
+        period_start = self.period_start.isoformat()
 
         picture_url = self.picture_url
 
@@ -109,9 +110,9 @@ class InstagramAccountSummaryResponse:
 
         net_follows = d.pop("net_follows")
 
-        period_end = d.pop("period_end")
+        period_end = datetime.datetime.fromisoformat(d.pop("period_end"))
 
-        period_start = d.pop("period_start")
+        period_start = datetime.datetime.fromisoformat(d.pop("period_start"))
 
         picture_url = d.pop("picture_url")
 

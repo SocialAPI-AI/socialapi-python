@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -23,7 +24,7 @@ class AccountPage:
         about (str | Unset):
         category (str | Unset):
         cover_photo_url (str | Unset):
-        enriched_at (str | Unset):
+        enriched_at (datetime.datetime | Unset):
         followers_count (int | Unset):
         link (str | Unset):
         profile_picture_url (str | Unset):
@@ -39,7 +40,7 @@ class AccountPage:
     about: str | Unset = UNSET
     category: str | Unset = UNSET
     cover_photo_url: str | Unset = UNSET
-    enriched_at: str | Unset = UNSET
+    enriched_at: datetime.datetime | Unset = UNSET
     followers_count: int | Unset = UNSET
     link: str | Unset = UNSET
     profile_picture_url: str | Unset = UNSET
@@ -64,7 +65,9 @@ class AccountPage:
 
         cover_photo_url = self.cover_photo_url
 
-        enriched_at = self.enriched_at
+        enriched_at: str | Unset = UNSET
+        if not isinstance(self.enriched_at, Unset):
+            enriched_at = self.enriched_at.isoformat()
 
         followers_count = self.followers_count
 
@@ -127,7 +130,12 @@ class AccountPage:
 
         cover_photo_url = d.pop("cover_photo_url", UNSET)
 
-        enriched_at = d.pop("enriched_at", UNSET)
+        _enriched_at = d.pop("enriched_at", UNSET)
+        enriched_at: datetime.datetime | Unset
+        if isinstance(_enriched_at, Unset):
+            enriched_at = UNSET
+        else:
+            enriched_at = datetime.datetime.fromisoformat(_enriched_at)
 
         followers_count = d.pop("followers_count", UNSET)
 

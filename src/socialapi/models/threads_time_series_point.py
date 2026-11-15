@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,16 +14,16 @@ T = TypeVar("T", bound="ThreadsTimeSeriesPoint")
 class ThreadsTimeSeriesPoint:
     """
     Attributes:
-        end_time (str):
+        end_time (datetime.datetime):
         value (int):
     """
 
-    end_time: str
+    end_time: datetime.datetime
     value: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        end_time = self.end_time
+        end_time = self.end_time.isoformat()
 
         value = self.value
 
@@ -40,7 +41,7 @@ class ThreadsTimeSeriesPoint:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        end_time = d.pop("end_time")
+        end_time = datetime.datetime.fromisoformat(d.pop("end_time"))
 
         value = d.pop("value")
 

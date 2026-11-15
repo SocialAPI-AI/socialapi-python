@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -19,14 +20,14 @@ class InboxPost:
         account_id (str):
         comment_count (int):
         content (None | str):
-        created_at (str):
+        created_at (datetime.datetime):
         id (str):
         like_count (int):
         permalink (None | str):
         platform (Platform):
-        published_at (None | str):
+        published_at (datetime.datetime | None):
         thumbnail (None | str):
-        updated_at (str):
+        updated_at (datetime.datetime):
         user_id (str):
         page_id (str | Unset):
         platform_id (str | Unset):
@@ -35,14 +36,14 @@ class InboxPost:
     account_id: str
     comment_count: int
     content: None | str
-    created_at: str
+    created_at: datetime.datetime
     id: str
     like_count: int
     permalink: None | str
     platform: Platform
-    published_at: None | str
+    published_at: datetime.datetime | None
     thumbnail: None | str
-    updated_at: str
+    updated_at: datetime.datetime
     user_id: str
     page_id: str | Unset = UNSET
     platform_id: str | Unset = UNSET
@@ -56,7 +57,7 @@ class InboxPost:
         content: None | str
         content = self.content
 
-        created_at = self.created_at
+        created_at = self.created_at.isoformat()
 
         id = self.id
 
@@ -68,12 +69,15 @@ class InboxPost:
         platform = self.platform.value
 
         published_at: None | str
-        published_at = self.published_at
+        if isinstance(self.published_at, datetime.datetime):
+            published_at = self.published_at.isoformat()
+        else:
+            published_at = self.published_at
 
         thumbnail: None | str
         thumbnail = self.thumbnail
 
-        updated_at = self.updated_at
+        updated_at = self.updated_at.isoformat()
 
         user_id = self.user_id
 
@@ -120,7 +124,7 @@ class InboxPost:
 
         content = _parse_content(d.pop("content"))
 
-        created_at = d.pop("created_at")
+        created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
 
         id = d.pop("id")
 
@@ -135,10 +139,18 @@ class InboxPost:
 
         platform = Platform(d.pop("platform"))
 
-        def _parse_published_at(data: object) -> None | str:
+        def _parse_published_at(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
-            return cast(None | str, data)
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                published_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return published_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None, data)
 
         published_at = _parse_published_at(d.pop("published_at"))
 
@@ -149,7 +161,7 @@ class InboxPost:
 
         thumbnail = _parse_thumbnail(d.pop("thumbnail"))
 
-        updated_at = d.pop("updated_at")
+        updated_at = datetime.datetime.fromisoformat(d.pop("updated_at"))
 
         user_id = d.pop("user_id")
 

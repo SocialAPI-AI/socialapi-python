@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -57,7 +58,8 @@ class UserMeResponse:
             "ban": the account was suspended for a Terms of Service violation.
             Paying does not lift it, and every route except this one returns
             403 auth.suspended. Contact support to appeal. Example: past_due.
-        billing_blocked_at (str | Unset): BillingBlockedAt is when the block began, or null when not blocked.
+        billing_blocked_at (datetime.datetime | Unset): BillingBlockedAt is when the block began, or null when not
+            blocked.
     """
 
     allowed_platforms: list[str]
@@ -78,7 +80,7 @@ class UserMeResponse:
     signup_metadata: None | UserMeResponseSignupMetadataType0
     use_case: None | str
     billing_block_reason: str | Unset = UNSET
-    billing_blocked_at: str | Unset = UNSET
+    billing_blocked_at: datetime.datetime | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -127,7 +129,9 @@ class UserMeResponse:
 
         billing_block_reason = self.billing_block_reason
 
-        billing_blocked_at = self.billing_blocked_at
+        billing_blocked_at: str | Unset = UNSET
+        if not isinstance(self.billing_blocked_at, Unset):
+            billing_blocked_at = self.billing_blocked_at.isoformat()
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -228,7 +232,12 @@ class UserMeResponse:
 
         billing_block_reason = d.pop("billing_block_reason", UNSET)
 
-        billing_blocked_at = d.pop("billing_blocked_at", UNSET)
+        _billing_blocked_at = d.pop("billing_blocked_at", UNSET)
+        billing_blocked_at: datetime.datetime | Unset
+        if isinstance(_billing_blocked_at, Unset):
+            billing_blocked_at = UNSET
+        else:
+            billing_blocked_at = datetime.datetime.fromisoformat(_billing_blocked_at)
 
         user_me_response = cls(
             allowed_platforms=allowed_platforms,

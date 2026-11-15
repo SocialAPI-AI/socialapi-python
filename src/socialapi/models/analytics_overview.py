@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -40,7 +41,8 @@ class AnalyticsOverview:
         top_posts (list[OverviewTopPost]):
         totals (OverviewTotals):
         tz (str):  Example: Europe/Paris.
-        metrics_synced_at (str | Unset): MetricsSyncedAt is the most recent counter refresh among the posts in
+        metrics_synced_at (datetime.datetime | Unset): MetricsSyncedAt is the most recent counter refresh among the
+            posts in
             range. Absent when none has been refreshed yet. Example: 2026-11-05T08:00:00Z.
     """
 
@@ -56,7 +58,7 @@ class AnalyticsOverview:
     top_posts: list[OverviewTopPost]
     totals: OverviewTotals
     tz: str
-    metrics_synced_at: str | Unset = UNSET
+    metrics_synced_at: datetime.datetime | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -99,7 +101,9 @@ class AnalyticsOverview:
 
         tz = self.tz
 
-        metrics_synced_at = self.metrics_synced_at
+        metrics_synced_at: str | Unset = UNSET
+        if not isinstance(self.metrics_synced_at, Unset):
+            metrics_synced_at = self.metrics_synced_at.isoformat()
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -184,7 +188,12 @@ class AnalyticsOverview:
 
         tz = d.pop("tz")
 
-        metrics_synced_at = d.pop("metrics_synced_at", UNSET)
+        _metrics_synced_at = d.pop("metrics_synced_at", UNSET)
+        metrics_synced_at: datetime.datetime | Unset
+        if isinstance(_metrics_synced_at, Unset):
+            metrics_synced_at = UNSET
+        else:
+            metrics_synced_at = datetime.datetime.fromisoformat(_metrics_synced_at)
 
         analytics_overview = cls(
             accounts_excluded=accounts_excluded,

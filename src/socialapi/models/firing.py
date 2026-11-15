@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -17,7 +18,7 @@ T = TypeVar("T", bound="Firing")
 class Firing:
     """
     Attributes:
-        created_at (str):
+        created_at (datetime.datetime):
         event_id (str): Platform id of the comment or message Example: 17858893269577012.
         id (str):  Example: afr_01J9Z8Y7X6W5V4T3S2R1Q0P9N8.
         outcomes (list[ActionOutcome] | None):
@@ -26,7 +27,7 @@ class Firing:
             passed Example: start.
     """
 
-    created_at: str
+    created_at: datetime.datetime
     event_id: str
     id: str
     outcomes: list[ActionOutcome] | None
@@ -35,7 +36,7 @@ class Firing:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        created_at = self.created_at
+        created_at = self.created_at.isoformat()
 
         event_id = self.event_id
 
@@ -75,7 +76,7 @@ class Firing:
         from ..models.action_outcome import ActionOutcome  # noqa: PLC0415
 
         d = dict(src_dict)
-        created_at = d.pop("created_at")
+        created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
 
         event_id = d.pop("event_id")
 

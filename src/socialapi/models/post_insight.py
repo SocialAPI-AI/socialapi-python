@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,26 +18,26 @@ class PostInsight:
     Attributes:
         clicks (int):
         comments (int):
-        created_at (str):
         engagement_rate (float):
         impressions (int):
         likes (int):
         post_id (str):
         shares (int):
         unique_views (int):
+        created_at (datetime.datetime | Unset):
         permalink (str | Unset):
         text (str | Unset):
     """
 
     clicks: int
     comments: int
-    created_at: str
     engagement_rate: float
     impressions: int
     likes: int
     post_id: str
     shares: int
     unique_views: int
+    created_at: datetime.datetime | Unset = UNSET
     permalink: str | Unset = UNSET
     text: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -45,8 +46,6 @@ class PostInsight:
         clicks = self.clicks
 
         comments = self.comments
-
-        created_at = self.created_at
 
         engagement_rate = self.engagement_rate
 
@@ -60,6 +59,10 @@ class PostInsight:
 
         unique_views = self.unique_views
 
+        created_at: str | Unset = UNSET
+        if not isinstance(self.created_at, Unset):
+            created_at = self.created_at.isoformat()
+
         permalink = self.permalink
 
         text = self.text
@@ -70,7 +73,6 @@ class PostInsight:
             {
                 "clicks": clicks,
                 "comments": comments,
-                "created_at": created_at,
                 "engagement_rate": engagement_rate,
                 "impressions": impressions,
                 "likes": likes,
@@ -79,6 +81,8 @@ class PostInsight:
                 "unique_views": unique_views,
             }
         )
+        if created_at is not UNSET:
+            field_dict["created_at"] = created_at
         if permalink is not UNSET:
             field_dict["permalink"] = permalink
         if text is not UNSET:
@@ -93,8 +97,6 @@ class PostInsight:
 
         comments = d.pop("comments")
 
-        created_at = d.pop("created_at")
-
         engagement_rate = d.pop("engagement_rate")
 
         impressions = d.pop("impressions")
@@ -107,6 +109,13 @@ class PostInsight:
 
         unique_views = d.pop("unique_views")
 
+        _created_at = d.pop("created_at", UNSET)
+        created_at: datetime.datetime | Unset
+        if isinstance(_created_at, Unset):
+            created_at = UNSET
+        else:
+            created_at = datetime.datetime.fromisoformat(_created_at)
+
         permalink = d.pop("permalink", UNSET)
 
         text = d.pop("text", UNSET)
@@ -114,13 +123,13 @@ class PostInsight:
         post_insight = cls(
             clicks=clicks,
             comments=comments,
-            created_at=created_at,
             engagement_rate=engagement_rate,
             impressions=impressions,
             likes=likes,
             post_id=post_id,
             shares=shares,
             unique_views=unique_views,
+            created_at=created_at,
             permalink=permalink,
             text=text,
         )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -32,7 +33,7 @@ class Interaction:
         metadata (InteractionMetadataType0 | None): [optional] Platform-specific keys: google sets "star_rating";
             facebook mentions set "permalink_url"; instagram sets "media_id" or "referral"
         platform (Platform):
-        received_at (str): [always] Example: 2026-02-15T14:30:00Z.
+        received_at (datetime.datetime): [always] Example: 2026-02-15T14:30:00Z.
         type_ (str): [always] One of: comment, review, dm, mention (or dm.sent/dm.received/dm.referral for webhook
             events) Example: comment.
         conversation_id (str | Unset): [optional] SocialAPI conversation ID; set on Facebook, Instagram, WhatsApp and
@@ -63,7 +64,7 @@ class Interaction:
     id: str
     metadata: InteractionMetadataType0 | None
     platform: Platform
-    received_at: str
+    received_at: datetime.datetime
     type_: str
     conversation_id: str | Unset = UNSET
     page_id: str | Unset = UNSET
@@ -95,7 +96,7 @@ class Interaction:
 
         platform = self.platform.value
 
-        received_at = self.received_at
+        received_at = self.received_at.isoformat()
 
         type_ = self.type_
 
@@ -192,7 +193,7 @@ class Interaction:
 
         platform = Platform(d.pop("platform"))
 
-        received_at = d.pop("received_at")
+        received_at = datetime.datetime.fromisoformat(d.pop("received_at"))
 
         type_ = d.pop("type")
 
