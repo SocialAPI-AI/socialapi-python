@@ -179,6 +179,8 @@ from .api_endpoints_post_target_response_platform import ApiEndpointsPostTargetR
 from .api_endpoints_post_target_response_platform_data import ApiEndpointsPostTargetResponsePlatformData
 from .api_endpoints_post_target_response_status import ApiEndpointsPostTargetResponseStatus
 from .api_endpoints_posts_list_response import ApiEndpointsPostsListResponse
+from .api_endpoints_posts_metrics_item import ApiEndpointsPostsMetricsItem
+from .api_endpoints_posts_metrics_response import ApiEndpointsPostsMetricsResponse
 from .api_endpoints_private_reply_attachment_input import ApiEndpointsPrivateReplyAttachmentInput
 from .api_endpoints_private_reply_attachment_input_source_type import ApiEndpointsPrivateReplyAttachmentInputSourceType
 from .api_endpoints_private_reply_attachment_input_type import ApiEndpointsPrivateReplyAttachmentInputType
@@ -692,6 +694,8 @@ __all__ = (
     "ApiEndpointsPostResponseStatus",
     "ApiEndpointsPostResponseVisibility",
     "ApiEndpointsPostsListResponse",
+    "ApiEndpointsPostsMetricsItem",
+    "ApiEndpointsPostsMetricsResponse",
     "ApiEndpointsPostTargetErrorResponse",
     "ApiEndpointsPostTargetErrorResponseCategory",
     "ApiEndpointsPostTargetErrorResponseCausedBy",
