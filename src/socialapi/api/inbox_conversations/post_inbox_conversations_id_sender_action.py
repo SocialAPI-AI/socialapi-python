@@ -106,8 +106,6 @@ def sync_detailed(
     message from the contact. WhatsApp has no typing_off and returns 400. Marking a message seen on
     WhatsApp also marks every earlier message in the chat as read.
 
-    Instagram and Messenger only accept these actions within 24 hours of the person's last message.
-
     Args:
         id (str):
         body (ApiEndpointsSenderActionRequest):
@@ -149,8 +147,6 @@ def sync(
     message from the contact. WhatsApp has no typing_off and returns 400. Marking a message seen on
     WhatsApp also marks every earlier message in the chat as read.
 
-    Instagram and Messenger only accept these actions within 24 hours of the person's last message.
-
     Args:
         id (str):
         body (ApiEndpointsSenderActionRequest):
@@ -186,8 +182,6 @@ async def asyncio_detailed(
     contact's latest message as read, clears after 25 seconds or when you reply, and needs at least one
     message from the contact. WhatsApp has no typing_off and returns 400. Marking a message seen on
     WhatsApp also marks every earlier message in the chat as read.
-
-    Instagram and Messenger only accept these actions within 24 hours of the person's last message.
 
     Args:
         id (str):
@@ -227,8 +221,6 @@ async def asyncio(
     contact's latest message as read, clears after 25 seconds or when you reply, and needs at least one
     message from the contact. WhatsApp has no typing_off and returns 400. Marking a message seen on
     WhatsApp also marks every earlier message in the chat as read.
-
-    Instagram and Messenger only accept these actions within 24 hours of the person's last message.
 
     Args:
         id (str):

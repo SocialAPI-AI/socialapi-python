@@ -103,10 +103,9 @@ def sync_detailed(
 ) -> Response[ApiEndpointsCommentedPostsListResponse | ApiEndpointsErrorResponse]:
     """List commented posts
 
-     Returns inbox posts that have comments, ordered by most-recently-commented. Supports filtering by
-    account, platform, minimum comment count, and date range. Uses cursor-based pagination. YouTube
-    commented posts only appear when the request is scoped with account_id (they are absent from the
-    unfiltered aggregate), and that list returns a single page (no cursor).
+     Returns the connected accounts' posts with their comment counts, newest published first. Add
+    min_comments=1 to keep only posts that have comments. Filter by account, brand, platform, minimum
+    comment count, and publish date. Uses cursor-based pagination.
 
     Args:
         account_id (str | Unset):
@@ -161,10 +160,9 @@ def sync(
 ) -> ApiEndpointsCommentedPostsListResponse | ApiEndpointsErrorResponse | None:
     """List commented posts
 
-     Returns inbox posts that have comments, ordered by most-recently-commented. Supports filtering by
-    account, platform, minimum comment count, and date range. Uses cursor-based pagination. YouTube
-    commented posts only appear when the request is scoped with account_id (they are absent from the
-    unfiltered aggregate), and that list returns a single page (no cursor).
+     Returns the connected accounts' posts with their comment counts, newest published first. Add
+    min_comments=1 to keep only posts that have comments. Filter by account, brand, platform, minimum
+    comment count, and publish date. Uses cursor-based pagination.
 
     Args:
         account_id (str | Unset):
@@ -214,10 +212,9 @@ async def asyncio_detailed(
 ) -> Response[ApiEndpointsCommentedPostsListResponse | ApiEndpointsErrorResponse]:
     """List commented posts
 
-     Returns inbox posts that have comments, ordered by most-recently-commented. Supports filtering by
-    account, platform, minimum comment count, and date range. Uses cursor-based pagination. YouTube
-    commented posts only appear when the request is scoped with account_id (they are absent from the
-    unfiltered aggregate), and that list returns a single page (no cursor).
+     Returns the connected accounts' posts with their comment counts, newest published first. Add
+    min_comments=1 to keep only posts that have comments. Filter by account, brand, platform, minimum
+    comment count, and publish date. Uses cursor-based pagination.
 
     Args:
         account_id (str | Unset):
@@ -270,10 +267,9 @@ async def asyncio(
 ) -> ApiEndpointsCommentedPostsListResponse | ApiEndpointsErrorResponse | None:
     """List commented posts
 
-     Returns inbox posts that have comments, ordered by most-recently-commented. Supports filtering by
-    account, platform, minimum comment count, and date range. Uses cursor-based pagination. YouTube
-    commented posts only appear when the request is scoped with account_id (they are absent from the
-    unfiltered aggregate), and that list returns a single page (no cursor).
+     Returns the connected accounts' posts with their comment counts, newest published first. Add
+    min_comments=1 to keep only posts that have comments. Filter by account, brand, platform, minimum
+    comment count, and publish date. Uses cursor-based pagination.
 
     Args:
         account_id (str | Unset):

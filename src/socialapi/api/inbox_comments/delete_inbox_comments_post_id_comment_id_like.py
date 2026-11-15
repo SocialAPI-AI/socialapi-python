@@ -94,8 +94,9 @@ def sync_detailed(
 ) -> Response[ApiEndpointsErrorResponse | ApiEndpointsSuccessResponse]:
     """Unlike a comment
 
-     Removes a like from a comment on the platform. Supported on Facebook, LinkedIn Pages, and Instagram
-    accounts connected with Facebook Login. Check the can_like capability flag.
+     Removes a like from a comment on the platform. Supported on Facebook, LinkedIn (company Pages and
+    member profiles), TikTok (default connection), and Instagram accounts connected with Facebook Login.
+    Check the can_like capability flag.
 
     Args:
         post_id (str):
@@ -132,8 +133,9 @@ def sync(
 ) -> ApiEndpointsErrorResponse | ApiEndpointsSuccessResponse | None:
     """Unlike a comment
 
-     Removes a like from a comment on the platform. Supported on Facebook, LinkedIn Pages, and Instagram
-    accounts connected with Facebook Login. Check the can_like capability flag.
+     Removes a like from a comment on the platform. Supported on Facebook, LinkedIn (company Pages and
+    member profiles), TikTok (default connection), and Instagram accounts connected with Facebook Login.
+    Check the can_like capability flag.
 
     Args:
         post_id (str):
@@ -165,8 +167,9 @@ async def asyncio_detailed(
 ) -> Response[ApiEndpointsErrorResponse | ApiEndpointsSuccessResponse]:
     """Unlike a comment
 
-     Removes a like from a comment on the platform. Supported on Facebook, LinkedIn Pages, and Instagram
-    accounts connected with Facebook Login. Check the can_like capability flag.
+     Removes a like from a comment on the platform. Supported on Facebook, LinkedIn (company Pages and
+    member profiles), TikTok (default connection), and Instagram accounts connected with Facebook Login.
+    Check the can_like capability flag.
 
     Args:
         post_id (str):
@@ -201,8 +204,9 @@ async def asyncio(
 ) -> ApiEndpointsErrorResponse | ApiEndpointsSuccessResponse | None:
     """Unlike a comment
 
-     Removes a like from a comment on the platform. Supported on Facebook, LinkedIn Pages, and Instagram
-    accounts connected with Facebook Login. Check the can_like capability flag.
+     Removes a like from a comment on the platform. Supported on Facebook, LinkedIn (company Pages and
+    member profiles), TikTok (default connection), and Instagram accounts connected with Facebook Login.
+    Check the can_like capability flag.
 
     Args:
         post_id (str):

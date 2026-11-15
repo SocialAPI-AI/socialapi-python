@@ -44,6 +44,11 @@ def _parse_response(
 
         return response_201
 
+    if response.status_code == 400:
+        response_400 = ApiEndpointsErrorResponse.from_dict(response.json())
+
+        return response_400
+
     if response.status_code == 403:
         response_403 = ApiEndpointsErrorResponse.from_dict(response.json())
 
@@ -86,8 +91,8 @@ def sync_detailed(
     """Assign a Facebook Page to a brand
 
      Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a
-    Page currently held by another brand of yours is moved to the target brand. Each brand can connect
-    up to 5 Facebook Pages, a hard cap. Assigning beyond that limit is refused.
+    Page another of your brands holds moves to the target brand. When facebook_page_selection is true,
+    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap.
 
     Args:
         login_id (str):
@@ -125,8 +130,8 @@ def sync(
     """Assign a Facebook Page to a brand
 
      Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a
-    Page currently held by another brand of yours is moved to the target brand. Each brand can connect
-    up to 5 Facebook Pages, a hard cap. Assigning beyond that limit is refused.
+    Page another of your brands holds moves to the target brand. When facebook_page_selection is true,
+    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap.
 
     Args:
         login_id (str):
@@ -159,8 +164,8 @@ async def asyncio_detailed(
     """Assign a Facebook Page to a brand
 
      Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a
-    Page currently held by another brand of yours is moved to the target brand. Each brand can connect
-    up to 5 Facebook Pages, a hard cap. Assigning beyond that limit is refused.
+    Page another of your brands holds moves to the target brand. When facebook_page_selection is true,
+    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap.
 
     Args:
         login_id (str):
@@ -196,8 +201,8 @@ async def asyncio(
     """Assign a Facebook Page to a brand
 
      Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a
-    Page currently held by another brand of yours is moved to the target brand. Each brand can connect
-    up to 5 Facebook Pages, a hard cap. Assigning beyond that limit is refused.
+    Page another of your brands holds moves to the target brand. When facebook_page_selection is true,
+    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap.
 
     Args:
         login_id (str):

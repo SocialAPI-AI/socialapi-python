@@ -103,15 +103,16 @@ def sync_detailed(
      Sends a direct message to the author of a comment. Only supported on Instagram and Facebook. Meta
     allows one private reply per comment, within 7 days of the comment; a second attempt or an expired
     window returns HTTP 400 with error code platform.instagram.private_reply_ineligible or
-    platform.facebook.private_reply_ineligible. Once a comment has spent its one reply, or the comment
-    is older than 7 days, further attempts are refused and do not count against your outbound message
-    rate; the error carries a reason of already_replied, platform_refused or window_expired. The 400 is
-    terminal: retrying it will never succeed. Set buttons (1 to 3) to send the reply as a button
-    template with text as its body; a tap on a postback button arrives as a dm.postback event. Set
-    attachment instead of text to send one image, video, audio or file: a private reply is a single
-    message, so it carries either text (with optional buttons) or one attachment, never both. You cannot
-    message the commenter again until they respond; once they do, the conversation continues within the
-    standard 24-hour messaging window. Check the can_private_reply capability flag.
+    platform.facebook.private_reply_ineligible. When the comment is already known to be ineligible, the
+    error carries blocked_locally true and a reason of already_replied, platform_refused or
+    window_expired. When blocked_locally is true, or the reply was text only, the 400 is final. When the
+    platform refuses a reply that carried buttons or an attachment, the refusal can come from that
+    content: send it once more as text only. Set buttons (1 to 3) to send the reply as a button template
+    with text as its body; a tap on a postback button arrives as a dm.postback event. Set attachment
+    instead of text to send one image, video, audio or file: a private reply is a single message, so it
+    carries either text (with optional buttons) or one attachment, never both. You cannot message the
+    commenter again until they respond; once they do, the conversation continues within the standard
+    24-hour messaging window. Check the can_private_reply capability flag.
 
     Args:
         post_id (str):
@@ -151,15 +152,16 @@ def sync(
      Sends a direct message to the author of a comment. Only supported on Instagram and Facebook. Meta
     allows one private reply per comment, within 7 days of the comment; a second attempt or an expired
     window returns HTTP 400 with error code platform.instagram.private_reply_ineligible or
-    platform.facebook.private_reply_ineligible. Once a comment has spent its one reply, or the comment
-    is older than 7 days, further attempts are refused and do not count against your outbound message
-    rate; the error carries a reason of already_replied, platform_refused or window_expired. The 400 is
-    terminal: retrying it will never succeed. Set buttons (1 to 3) to send the reply as a button
-    template with text as its body; a tap on a postback button arrives as a dm.postback event. Set
-    attachment instead of text to send one image, video, audio or file: a private reply is a single
-    message, so it carries either text (with optional buttons) or one attachment, never both. You cannot
-    message the commenter again until they respond; once they do, the conversation continues within the
-    standard 24-hour messaging window. Check the can_private_reply capability flag.
+    platform.facebook.private_reply_ineligible. When the comment is already known to be ineligible, the
+    error carries blocked_locally true and a reason of already_replied, platform_refused or
+    window_expired. When blocked_locally is true, or the reply was text only, the 400 is final. When the
+    platform refuses a reply that carried buttons or an attachment, the refusal can come from that
+    content: send it once more as text only. Set buttons (1 to 3) to send the reply as a button template
+    with text as its body; a tap on a postback button arrives as a dm.postback event. Set attachment
+    instead of text to send one image, video, audio or file: a private reply is a single message, so it
+    carries either text (with optional buttons) or one attachment, never both. You cannot message the
+    commenter again until they respond; once they do, the conversation continues within the standard
+    24-hour messaging window. Check the can_private_reply capability flag.
 
     Args:
         post_id (str):
@@ -194,15 +196,16 @@ async def asyncio_detailed(
      Sends a direct message to the author of a comment. Only supported on Instagram and Facebook. Meta
     allows one private reply per comment, within 7 days of the comment; a second attempt or an expired
     window returns HTTP 400 with error code platform.instagram.private_reply_ineligible or
-    platform.facebook.private_reply_ineligible. Once a comment has spent its one reply, or the comment
-    is older than 7 days, further attempts are refused and do not count against your outbound message
-    rate; the error carries a reason of already_replied, platform_refused or window_expired. The 400 is
-    terminal: retrying it will never succeed. Set buttons (1 to 3) to send the reply as a button
-    template with text as its body; a tap on a postback button arrives as a dm.postback event. Set
-    attachment instead of text to send one image, video, audio or file: a private reply is a single
-    message, so it carries either text (with optional buttons) or one attachment, never both. You cannot
-    message the commenter again until they respond; once they do, the conversation continues within the
-    standard 24-hour messaging window. Check the can_private_reply capability flag.
+    platform.facebook.private_reply_ineligible. When the comment is already known to be ineligible, the
+    error carries blocked_locally true and a reason of already_replied, platform_refused or
+    window_expired. When blocked_locally is true, or the reply was text only, the 400 is final. When the
+    platform refuses a reply that carried buttons or an attachment, the refusal can come from that
+    content: send it once more as text only. Set buttons (1 to 3) to send the reply as a button template
+    with text as its body; a tap on a postback button arrives as a dm.postback event. Set attachment
+    instead of text to send one image, video, audio or file: a private reply is a single message, so it
+    carries either text (with optional buttons) or one attachment, never both. You cannot message the
+    commenter again until they respond; once they do, the conversation continues within the standard
+    24-hour messaging window. Check the can_private_reply capability flag.
 
     Args:
         post_id (str):
@@ -240,15 +243,16 @@ async def asyncio(
      Sends a direct message to the author of a comment. Only supported on Instagram and Facebook. Meta
     allows one private reply per comment, within 7 days of the comment; a second attempt or an expired
     window returns HTTP 400 with error code platform.instagram.private_reply_ineligible or
-    platform.facebook.private_reply_ineligible. Once a comment has spent its one reply, or the comment
-    is older than 7 days, further attempts are refused and do not count against your outbound message
-    rate; the error carries a reason of already_replied, platform_refused or window_expired. The 400 is
-    terminal: retrying it will never succeed. Set buttons (1 to 3) to send the reply as a button
-    template with text as its body; a tap on a postback button arrives as a dm.postback event. Set
-    attachment instead of text to send one image, video, audio or file: a private reply is a single
-    message, so it carries either text (with optional buttons) or one attachment, never both. You cannot
-    message the commenter again until they respond; once they do, the conversation continues within the
-    standard 24-hour messaging window. Check the can_private_reply capability flag.
+    platform.facebook.private_reply_ineligible. When the comment is already known to be ineligible, the
+    error carries blocked_locally true and a reason of already_replied, platform_refused or
+    window_expired. When blocked_locally is true, or the reply was text only, the 400 is final. When the
+    platform refuses a reply that carried buttons or an attachment, the refusal can come from that
+    content: send it once more as text only. Set buttons (1 to 3) to send the reply as a button template
+    with text as its body; a tap on a postback button arrives as a dm.postback event. Set attachment
+    instead of text to send one image, video, audio or file: a private reply is a single message, so it
+    carries either text (with optional buttons) or one attachment, never both. You cannot message the
+    commenter again until they respond; once they do, the conversation continues within the standard
+    24-hour messaging window. Check the can_private_reply capability flag.
 
     Args:
         post_id (str):

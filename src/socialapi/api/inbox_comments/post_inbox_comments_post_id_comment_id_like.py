@@ -95,9 +95,10 @@ def sync_detailed(
 ) -> Response[ApiEndpointsErrorResponse | ApiEndpointsSuccessResponse]:
     """Like a comment
 
-     Likes a comment on the platform as the connected account. Supported on Facebook, LinkedIn Pages, and
-    Instagram accounts connected with Facebook Login. Instagram accounts connected with Instagram Login
-    cannot like comments. Check the can_like capability flag.
+     Likes a comment on the platform as the connected account. Supported on Facebook, LinkedIn (company
+    Pages and member profiles), TikTok (default connection), and Instagram accounts connected with
+    Facebook Login. Instagram accounts connected with Instagram Login cannot like comments. Check the
+    can_like capability flag.
 
     Args:
         post_id (str):
@@ -134,9 +135,10 @@ def sync(
 ) -> ApiEndpointsErrorResponse | ApiEndpointsSuccessResponse | None:
     """Like a comment
 
-     Likes a comment on the platform as the connected account. Supported on Facebook, LinkedIn Pages, and
-    Instagram accounts connected with Facebook Login. Instagram accounts connected with Instagram Login
-    cannot like comments. Check the can_like capability flag.
+     Likes a comment on the platform as the connected account. Supported on Facebook, LinkedIn (company
+    Pages and member profiles), TikTok (default connection), and Instagram accounts connected with
+    Facebook Login. Instagram accounts connected with Instagram Login cannot like comments. Check the
+    can_like capability flag.
 
     Args:
         post_id (str):
@@ -168,9 +170,10 @@ async def asyncio_detailed(
 ) -> Response[ApiEndpointsErrorResponse | ApiEndpointsSuccessResponse]:
     """Like a comment
 
-     Likes a comment on the platform as the connected account. Supported on Facebook, LinkedIn Pages, and
-    Instagram accounts connected with Facebook Login. Instagram accounts connected with Instagram Login
-    cannot like comments. Check the can_like capability flag.
+     Likes a comment on the platform as the connected account. Supported on Facebook, LinkedIn (company
+    Pages and member profiles), TikTok (default connection), and Instagram accounts connected with
+    Facebook Login. Instagram accounts connected with Instagram Login cannot like comments. Check the
+    can_like capability flag.
 
     Args:
         post_id (str):
@@ -205,9 +208,10 @@ async def asyncio(
 ) -> ApiEndpointsErrorResponse | ApiEndpointsSuccessResponse | None:
     """Like a comment
 
-     Likes a comment on the platform as the connected account. Supported on Facebook, LinkedIn Pages, and
-    Instagram accounts connected with Facebook Login. Instagram accounts connected with Instagram Login
-    cannot like comments. Check the can_like capability flag.
+     Likes a comment on the platform as the connected account. Supported on Facebook, LinkedIn (company
+    Pages and member profiles), TikTok (default connection), and Instagram accounts connected with
+    Facebook Login. Instagram accounts connected with Instagram Login cannot like comments. Check the
+    can_like capability flag.
 
     Args:
         post_id (str):

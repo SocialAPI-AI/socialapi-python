@@ -43,10 +43,10 @@ class ApiEndpointsSendMessageRequest:
             than the 3 buttons a reply-button message allows (up to 10 rows in total,
             across up to 10 sections). WhatsApp only; requires text and list_button.
         message_tag (str | Unset): Optional. Only `HUMAN_AGENT` is accepted, on Instagram accounts connected with
-            Instagram Login, for replies a person types between 24 hours and 7 days after the person's last message. It must
-            not be used by workflows, automations, bots, AI agents acting on their own, broadcasts, promotions or re-
-            engagement. It needs to be enabled for your account by support. Inside 24 hours the message is sent without the
-            tag. Misuse pauses or revokes access and can get the account restricted by Meta. Example: HUMAN_AGENT.
+            Instagram Login, for replies a member of your team types between 24 hours and 7 days after the person's last
+            message. Workflows, automations, bots and AI agents acting on their own send without it, so they reply within 24
+            hours of the person's last message. Ask support to enable it for your account. Inside 24 hours the message is
+            sent without the tag. Example: HUMAN_AGENT.
         quick_replies (list[ApiEndpointsMessageQuickReply] | Unset): QuickReplies renders up to 13 tappable chips above
             the keyboard; requires text.
         reply_to_message_id (str | Unset): ReplyToMessageID makes the first sent bubble a reply to a specific prior

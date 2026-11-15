@@ -37,6 +37,11 @@ def _parse_response(
 
         return response_401
 
+    if response.status_code == 403:
+        response_403 = ApiEndpointsErrorResponse.from_dict(response.json())
+
+        return response_403
+
     if response.status_code == 404:
         response_404 = ApiEndpointsErrorResponse.from_dict(response.json())
 
@@ -66,9 +71,9 @@ def sync_detailed(
 ) -> Response[ApiEndpointsErrorResponse | ApiEndpointsFacebookLoginPagesResponse]:
     """List a Facebook login's Pages
 
-     Lists every Page this login can manage, live from Meta, merged with assignment state. Pages granted
-    after the last OAuth exchange appear here without re-authenticating. assignable reflects ownership
-    only; the 5-page-per-brand cap is enforced when assigning.
+     Lists every Page this login can manage, with the brand that holds each. assignable reflects
+    ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page
+    allowance.
 
     Args:
         login_id (str):
@@ -99,9 +104,9 @@ def sync(
 ) -> ApiEndpointsErrorResponse | ApiEndpointsFacebookLoginPagesResponse | None:
     """List a Facebook login's Pages
 
-     Lists every Page this login can manage, live from Meta, merged with assignment state. Pages granted
-    after the last OAuth exchange appear here without re-authenticating. assignable reflects ownership
-    only; the 5-page-per-brand cap is enforced when assigning.
+     Lists every Page this login can manage, with the brand that holds each. assignable reflects
+    ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page
+    allowance.
 
     Args:
         login_id (str):
@@ -127,9 +132,9 @@ async def asyncio_detailed(
 ) -> Response[ApiEndpointsErrorResponse | ApiEndpointsFacebookLoginPagesResponse]:
     """List a Facebook login's Pages
 
-     Lists every Page this login can manage, live from Meta, merged with assignment state. Pages granted
-    after the last OAuth exchange appear here without re-authenticating. assignable reflects ownership
-    only; the 5-page-per-brand cap is enforced when assigning.
+     Lists every Page this login can manage, with the brand that holds each. assignable reflects
+    ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page
+    allowance.
 
     Args:
         login_id (str):
@@ -158,9 +163,9 @@ async def asyncio(
 ) -> ApiEndpointsErrorResponse | ApiEndpointsFacebookLoginPagesResponse | None:
     """List a Facebook login's Pages
 
-     Lists every Page this login can manage, live from Meta, merged with assignment state. Pages granted
-    after the last OAuth exchange appear here without re-authenticating. assignable reflects ownership
-    only; the 5-page-per-brand cap is enforced when assigning.
+     Lists every Page this login can manage, with the brand that holds each. assignable reflects
+    ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page
+    allowance.
 
     Args:
         login_id (str):

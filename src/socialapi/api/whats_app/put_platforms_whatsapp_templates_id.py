@@ -85,9 +85,10 @@ def sync_detailed(
 ) -> Response[Any | ApiEndpointsErrorResponse]:
     """Edit a message template
 
-     Updates the components of an existing message template by its WhatsApp template ID. Only APPROVED
-    templates can be edited, and editing resets the template to PENDING for re-review. APPROVED
-    templates are limited to one edit per day.
+     Updates the components of an existing message template by its WhatsApp template ID. Only APPROVED,
+    REJECTED or PAUSED templates can be edited. Meta reviews the edit again: an edited APPROVED or
+    PAUSED template returns to APPROVED unless it fails review. Meta allows an approved template 1 edit
+    per 24 hours and 10 per 30 days.
 
     Args:
         id (str):
@@ -121,9 +122,10 @@ def sync(
 ) -> Any | ApiEndpointsErrorResponse | None:
     """Edit a message template
 
-     Updates the components of an existing message template by its WhatsApp template ID. Only APPROVED
-    templates can be edited, and editing resets the template to PENDING for re-review. APPROVED
-    templates are limited to one edit per day.
+     Updates the components of an existing message template by its WhatsApp template ID. Only APPROVED,
+    REJECTED or PAUSED templates can be edited. Meta reviews the edit again: an edited APPROVED or
+    PAUSED template returns to APPROVED unless it fails review. Meta allows an approved template 1 edit
+    per 24 hours and 10 per 30 days.
 
     Args:
         id (str):
@@ -152,9 +154,10 @@ async def asyncio_detailed(
 ) -> Response[Any | ApiEndpointsErrorResponse]:
     """Edit a message template
 
-     Updates the components of an existing message template by its WhatsApp template ID. Only APPROVED
-    templates can be edited, and editing resets the template to PENDING for re-review. APPROVED
-    templates are limited to one edit per day.
+     Updates the components of an existing message template by its WhatsApp template ID. Only APPROVED,
+    REJECTED or PAUSED templates can be edited. Meta reviews the edit again: an edited APPROVED or
+    PAUSED template returns to APPROVED unless it fails review. Meta allows an approved template 1 edit
+    per 24 hours and 10 per 30 days.
 
     Args:
         id (str):
@@ -186,9 +189,10 @@ async def asyncio(
 ) -> Any | ApiEndpointsErrorResponse | None:
     """Edit a message template
 
-     Updates the components of an existing message template by its WhatsApp template ID. Only APPROVED
-    templates can be edited, and editing resets the template to PENDING for re-review. APPROVED
-    templates are limited to one edit per day.
+     Updates the components of an existing message template by its WhatsApp template ID. Only APPROVED,
+    REJECTED or PAUSED templates can be edited. Meta reviews the edit again: an edited APPROVED or
+    PAUSED template returns to APPROVED unless it fails review. Meta allows an approved template 1 edit
+    per 24 hours and 10 per 30 days.
 
     Args:
         id (str):
