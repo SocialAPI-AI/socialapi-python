@@ -92,7 +92,9 @@ def sync_detailed(
 
      Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a
     Page another of your brands holds moves to the target brand. When facebook_page_selection is true,
-    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap.
+    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap. A
+    brand-restricted key can only move Pages held by brands on its list: any other Page returns 400
+    validation.page_not_granted.
 
     Args:
         login_id (str):
@@ -131,7 +133,9 @@ def sync(
 
      Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a
     Page another of your brands holds moves to the target brand. When facebook_page_selection is true,
-    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap.
+    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap. A
+    brand-restricted key can only move Pages held by brands on its list: any other Page returns 400
+    validation.page_not_granted.
 
     Args:
         login_id (str):
@@ -165,7 +169,9 @@ async def asyncio_detailed(
 
      Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a
     Page another of your brands holds moves to the target brand. When facebook_page_selection is true,
-    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap.
+    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap. A
+    brand-restricted key can only move Pages held by brands on its list: any other Page returns 400
+    validation.page_not_granted.
 
     Args:
         login_id (str):
@@ -202,7 +208,9 @@ async def asyncio(
 
      Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a
     Page another of your brands holds moves to the target brand. When facebook_page_selection is true,
-    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap.
+    assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap. A
+    brand-restricted key can only move Pages held by brands on its list: any other Page returns 400
+    validation.page_not_granted.
 
     Args:
         login_id (str):

@@ -37,10 +37,20 @@ def _parse_response(
 
         return response_401
 
+    if response.status_code == 403:
+        response_403 = ApiEndpointsErrorResponse.from_dict(response.json())
+
+        return response_403
+
     if response.status_code == 404:
         response_404 = ApiEndpointsErrorResponse.from_dict(response.json())
 
         return response_404
+
+    if response.status_code == 429:
+        response_429 = ApiEndpointsErrorResponse.from_dict(response.json())
+
+        return response_429
 
     if response.status_code == 501:
         response_501 = ApiEndpointsErrorResponse.from_dict(response.json())
@@ -76,6 +86,10 @@ def sync_detailed(
 ) -> Response[ApiEndpointsErrorResponse | PostPlatformsYoutubeAccountsIdSyncResponse200]:
     """Re-sync a YouTube account's videos
 
+     Starts a sync of the account's videos and returns once it is started. Poll GET /accounts/{id}/sync
+    until state leaves "syncing", then read the posts. Shares the cooldown and the daily sync limit of
+    POST /accounts/{id}/sync.
+
     Args:
         id (str):
 
@@ -105,6 +119,10 @@ def sync(
 ) -> ApiEndpointsErrorResponse | PostPlatformsYoutubeAccountsIdSyncResponse200 | None:
     """Re-sync a YouTube account's videos
 
+     Starts a sync of the account's videos and returns once it is started. Poll GET /accounts/{id}/sync
+    until state leaves "syncing", then read the posts. Shares the cooldown and the daily sync limit of
+    POST /accounts/{id}/sync.
+
     Args:
         id (str):
 
@@ -128,6 +146,10 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 ) -> Response[ApiEndpointsErrorResponse | PostPlatformsYoutubeAccountsIdSyncResponse200]:
     """Re-sync a YouTube account's videos
+
+     Starts a sync of the account's videos and returns once it is started. Poll GET /accounts/{id}/sync
+    until state leaves "syncing", then read the posts. Shares the cooldown and the daily sync limit of
+    POST /accounts/{id}/sync.
 
     Args:
         id (str):
@@ -155,6 +177,10 @@ async def asyncio(
     client: AuthenticatedClient,
 ) -> ApiEndpointsErrorResponse | PostPlatformsYoutubeAccountsIdSyncResponse200 | None:
     """Re-sync a YouTube account's videos
+
+     Starts a sync of the account's videos and returns once it is started. Poll GET /accounts/{id}/sync
+    until state leaves "syncing", then read the posts. Shares the cooldown and the daily sync limit of
+    POST /accounts/{id}/sync.
 
     Args:
         id (str):

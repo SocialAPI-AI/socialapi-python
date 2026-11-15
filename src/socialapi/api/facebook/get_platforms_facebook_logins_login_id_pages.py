@@ -73,7 +73,7 @@ def sync_detailed(
 
      Lists every Page this login can manage, with the brand that holds each. assignable reflects
     ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page
-    allowance.
+    allowance. A brand-restricted key does not see Pages held by brands outside its list.
 
     Args:
         login_id (str):
@@ -106,7 +106,7 @@ def sync(
 
      Lists every Page this login can manage, with the brand that holds each. assignable reflects
     ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page
-    allowance.
+    allowance. A brand-restricted key does not see Pages held by brands outside its list.
 
     Args:
         login_id (str):
@@ -134,7 +134,7 @@ async def asyncio_detailed(
 
      Lists every Page this login can manage, with the brand that holds each. assignable reflects
     ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page
-    allowance.
+    allowance. A brand-restricted key does not see Pages held by brands outside its list.
 
     Args:
         login_id (str):
@@ -165,7 +165,7 @@ async def asyncio(
 
      Lists every Page this login can manage, with the brand that holds each. assignable reflects
     ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page
-    allowance.
+    allowance. A brand-restricted key does not see Pages held by brands outside its list.
 
     Args:
         login_id (str):
