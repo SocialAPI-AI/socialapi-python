@@ -5,8 +5,8 @@ import httpx2
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.api_endpoints_error_response import ApiEndpointsErrorResponse
-from ...models.api_endpoints_storage_usage_response import ApiEndpointsStorageUsageResponse
+from ...models.error_response import ErrorResponse
+from ...models.storage_usage_response import StorageUsageResponse
 from ...types import Response
 
 
@@ -21,19 +21,19 @@ def _get_kwargs() -> dict[str, Any]:
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx2.Response
-) -> ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse | None:
+) -> ErrorResponse | StorageUsageResponse | None:
     if response.status_code == 200:
-        response_200 = ApiEndpointsStorageUsageResponse.from_dict(response.json())
+        response_200 = StorageUsageResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = ApiEndpointsErrorResponse.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 500:
-        response_500 = ApiEndpointsErrorResponse.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -45,7 +45,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx2.Response
-) -> Response[ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse]:
+) -> Response[ErrorResponse | StorageUsageResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -57,7 +57,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse]:
+) -> Response[ErrorResponse | StorageUsageResponse]:
     """Get storage usage
 
      Returns total bytes used, the plan limit, and file count for the authenticated user.
@@ -67,7 +67,7 @@ def sync_detailed(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse]
+        Response[ErrorResponse | StorageUsageResponse]
     """
 
     kwargs = _get_kwargs()
@@ -82,7 +82,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-) -> ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse | None:
+) -> ErrorResponse | StorageUsageResponse | None:
     """Get storage usage
 
      Returns total bytes used, the plan limit, and file count for the authenticated user.
@@ -92,7 +92,7 @@ def sync(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse
+        ErrorResponse | StorageUsageResponse
     """
 
     return sync_detailed(
@@ -103,7 +103,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse]:
+) -> Response[ErrorResponse | StorageUsageResponse]:
     """Get storage usage
 
      Returns total bytes used, the plan limit, and file count for the authenticated user.
@@ -113,7 +113,7 @@ async def asyncio_detailed(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse]
+        Response[ErrorResponse | StorageUsageResponse]
     """
 
     kwargs = _get_kwargs()
@@ -126,7 +126,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-) -> ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse | None:
+) -> ErrorResponse | StorageUsageResponse | None:
     """Get storage usage
 
      Returns total bytes used, the plan limit, and file count for the authenticated user.
@@ -136,7 +136,7 @@ async def asyncio(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ApiEndpointsErrorResponse | ApiEndpointsStorageUsageResponse
+        ErrorResponse | StorageUsageResponse
     """
 
     return (

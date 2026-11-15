@@ -5,8 +5,8 @@ import httpx2
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.api_endpoints_error_response import ApiEndpointsErrorResponse
-from ...models.api_endpoints_usage_response import ApiEndpointsUsageResponse
+from ...models.error_response import ErrorResponse
+from ...models.usage_response import UsageResponse
 from ...types import Response
 
 
@@ -21,14 +21,14 @@ def _get_kwargs() -> dict[str, Any]:
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx2.Response
-) -> ApiEndpointsErrorResponse | ApiEndpointsUsageResponse | None:
+) -> ErrorResponse | UsageResponse | None:
     if response.status_code == 200:
-        response_200 = ApiEndpointsUsageResponse.from_dict(response.json())
+        response_200 = UsageResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = ApiEndpointsErrorResponse.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -40,7 +40,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx2.Response
-) -> Response[ApiEndpointsErrorResponse | ApiEndpointsUsageResponse]:
+) -> Response[ErrorResponse | UsageResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -52,7 +52,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[ApiEndpointsErrorResponse | ApiEndpointsUsageResponse]:
+) -> Response[ErrorResponse | UsageResponse]:
     """Get resource usage for the current billing period
 
      Returns brands, posts, and interactions consumed during the current billing period alongside the
@@ -64,7 +64,7 @@ def sync_detailed(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ApiEndpointsErrorResponse | ApiEndpointsUsageResponse]
+        Response[ErrorResponse | UsageResponse]
     """
 
     kwargs = _get_kwargs()
@@ -79,7 +79,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-) -> ApiEndpointsErrorResponse | ApiEndpointsUsageResponse | None:
+) -> ErrorResponse | UsageResponse | None:
     """Get resource usage for the current billing period
 
      Returns brands, posts, and interactions consumed during the current billing period alongside the
@@ -91,7 +91,7 @@ def sync(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ApiEndpointsErrorResponse | ApiEndpointsUsageResponse
+        ErrorResponse | UsageResponse
     """
 
     return sync_detailed(
@@ -102,7 +102,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[ApiEndpointsErrorResponse | ApiEndpointsUsageResponse]:
+) -> Response[ErrorResponse | UsageResponse]:
     """Get resource usage for the current billing period
 
      Returns brands, posts, and interactions consumed during the current billing period alongside the
@@ -114,7 +114,7 @@ async def asyncio_detailed(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ApiEndpointsErrorResponse | ApiEndpointsUsageResponse]
+        Response[ErrorResponse | UsageResponse]
     """
 
     kwargs = _get_kwargs()
@@ -127,7 +127,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-) -> ApiEndpointsErrorResponse | ApiEndpointsUsageResponse | None:
+) -> ErrorResponse | UsageResponse | None:
     """Get resource usage for the current billing period
 
      Returns brands, posts, and interactions consumed during the current billing period alongside the
@@ -139,7 +139,7 @@ async def asyncio(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ApiEndpointsErrorResponse | ApiEndpointsUsageResponse
+        ErrorResponse | UsageResponse
     """
 
     return (

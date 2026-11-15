@@ -1,0 +1,231 @@
+from http import HTTPStatus
+from typing import Any
+from urllib.parse import quote
+
+import httpx2
+
+from ... import errors
+from ...client import AuthenticatedClient, Client
+from ...models.error_response import ErrorResponse
+from ...models.whats_app_send_template_request import WhatsAppSendTemplateRequest
+from ...models.whats_app_send_template_response import WhatsAppSendTemplateResponse
+from ...types import Response
+
+
+def _get_kwargs(
+    account_id: str,
+    *,
+    body: WhatsAppSendTemplateRequest,
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
+
+    _kwargs: dict[str, Any] = {
+        "method": "post",
+        "url": "/platforms/whatsapp/accounts/{account_id}/send-template".format(
+            account_id=quote(str(account_id), safe=""),
+        ),
+    }
+
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
+
+
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx2.Response
+) -> ErrorResponse | WhatsAppSendTemplateResponse | None:
+    if response.status_code == 200:
+        response_200 = WhatsAppSendTemplateResponse.from_dict(response.json())
+
+        return response_200
+
+    if response.status_code == 400:
+        response_400 = ErrorResponse.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = ErrorResponse.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = ErrorResponse.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = ErrorResponse.from_dict(response.json())
+
+        return response_404
+
+    if response.status_code == 429:
+        response_429 = ErrorResponse.from_dict(response.json())
+
+        return response_429
+
+    if response.status_code == 503:
+        response_503 = ErrorResponse.from_dict(response.json())
+
+        return response_503
+
+    if client.raise_on_unexpected_status:
+        raise errors.UnexpectedStatus(response.status_code, response.content)
+    else:
+        return None
+
+
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx2.Response
+) -> Response[ErrorResponse | WhatsAppSendTemplateResponse]:
+    return Response(
+        status_code=HTTPStatus(response.status_code),
+        content=response.content,
+        headers=response.headers,
+        parsed=_parse_response(client=client, response=response),
+    )
+
+
+def sync_detailed(
+    account_id: str,
+    *,
+    client: AuthenticatedClient,
+    body: WhatsAppSendTemplateRequest,
+) -> Response[ErrorResponse | WhatsAppSendTemplateResponse]:
+    """Send a template message
+
+     Sends an approved WhatsApp template message to a recipient phone number. Template messages can be
+    sent outside the 24-hour customer service window. The template must already be APPROVED on the WABA,
+    and the language code must match an approved variant. Component parameter order must match the
+    template's placeholders. The response includes message_id, the SocialAPI message ID for the send,
+    which matches the id field on the dm.status.* webhooks for this message.
+
+    Args:
+        account_id (str):
+        body (WhatsAppSendTemplateRequest):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx2.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Response[ErrorResponse | WhatsAppSendTemplateResponse]
+    """
+
+    kwargs = _get_kwargs(
+        account_id=account_id,
+        body=body,
+    )
+
+    response = client.get_httpx_client().request(
+        **kwargs,
+    )
+
+    return _build_response(client=client, response=response)
+
+
+def sync(
+    account_id: str,
+    *,
+    client: AuthenticatedClient,
+    body: WhatsAppSendTemplateRequest,
+) -> ErrorResponse | WhatsAppSendTemplateResponse | None:
+    """Send a template message
+
+     Sends an approved WhatsApp template message to a recipient phone number. Template messages can be
+    sent outside the 24-hour customer service window. The template must already be APPROVED on the WABA,
+    and the language code must match an approved variant. Component parameter order must match the
+    template's placeholders. The response includes message_id, the SocialAPI message ID for the send,
+    which matches the id field on the dm.status.* webhooks for this message.
+
+    Args:
+        account_id (str):
+        body (WhatsAppSendTemplateRequest):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx2.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        ErrorResponse | WhatsAppSendTemplateResponse
+    """
+
+    return sync_detailed(
+        account_id=account_id,
+        client=client,
+        body=body,
+    ).parsed
+
+
+async def asyncio_detailed(
+    account_id: str,
+    *,
+    client: AuthenticatedClient,
+    body: WhatsAppSendTemplateRequest,
+) -> Response[ErrorResponse | WhatsAppSendTemplateResponse]:
+    """Send a template message
+
+     Sends an approved WhatsApp template message to a recipient phone number. Template messages can be
+    sent outside the 24-hour customer service window. The template must already be APPROVED on the WABA,
+    and the language code must match an approved variant. Component parameter order must match the
+    template's placeholders. The response includes message_id, the SocialAPI message ID for the send,
+    which matches the id field on the dm.status.* webhooks for this message.
+
+    Args:
+        account_id (str):
+        body (WhatsAppSendTemplateRequest):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx2.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Response[ErrorResponse | WhatsAppSendTemplateResponse]
+    """
+
+    kwargs = _get_kwargs(
+        account_id=account_id,
+        body=body,
+    )
+
+    response = await client.get_async_httpx_client().request(**kwargs)
+
+    return _build_response(client=client, response=response)
+
+
+async def asyncio(
+    account_id: str,
+    *,
+    client: AuthenticatedClient,
+    body: WhatsAppSendTemplateRequest,
+) -> ErrorResponse | WhatsAppSendTemplateResponse | None:
+    """Send a template message
+
+     Sends an approved WhatsApp template message to a recipient phone number. Template messages can be
+    sent outside the 24-hour customer service window. The template must already be APPROVED on the WABA,
+    and the language code must match an approved variant. Component parameter order must match the
+    template's placeholders. The response includes message_id, the SocialAPI message ID for the send,
+    which matches the id field on the dm.status.* webhooks for this message.
+
+    Args:
+        account_id (str):
+        body (WhatsAppSendTemplateRequest):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx2.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        ErrorResponse | WhatsAppSendTemplateResponse
+    """
+
+    return (
+        await asyncio_detailed(
+            account_id=account_id,
+            client=client,
+            body=body,
+        )
+    ).parsed

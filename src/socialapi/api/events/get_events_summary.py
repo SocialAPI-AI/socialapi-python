@@ -5,8 +5,8 @@ import httpx2
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.api_endpoints_error_response import ApiEndpointsErrorResponse
-from ...models.api_endpoints_events_summary_response import ApiEndpointsEventsSummaryResponse
+from ...models.error_response import ErrorResponse
+from ...models.events_summary_response import EventsSummaryResponse
 from ...types import UNSET, Response, Unset
 
 
@@ -34,14 +34,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx2.Response
-) -> ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse | None:
+) -> ErrorResponse | EventsSummaryResponse | None:
     if response.status_code == 200:
-        response_200 = ApiEndpointsEventsSummaryResponse.from_dict(response.json())
+        response_200 = EventsSummaryResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 400:
-        response_400 = ApiEndpointsErrorResponse.from_dict(response.json())
+        response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
 
@@ -53,7 +53,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx2.Response
-) -> Response[ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse]:
+) -> Response[ErrorResponse | EventsSummaryResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -67,7 +67,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     from_: str | Unset = UNSET,
     to: str | Unset = UNSET,
-) -> Response[ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse]:
+) -> Response[ErrorResponse | EventsSummaryResponse]:
     """Event summary counts
 
      Returns aggregated event counts for the requested window: totals, failure counts, breakdowns by
@@ -82,7 +82,7 @@ def sync_detailed(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse]
+        Response[ErrorResponse | EventsSummaryResponse]
     """
 
     kwargs = _get_kwargs(
@@ -102,7 +102,7 @@ def sync(
     client: AuthenticatedClient,
     from_: str | Unset = UNSET,
     to: str | Unset = UNSET,
-) -> ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse | None:
+) -> ErrorResponse | EventsSummaryResponse | None:
     """Event summary counts
 
      Returns aggregated event counts for the requested window: totals, failure counts, breakdowns by
@@ -117,7 +117,7 @@ def sync(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse
+        ErrorResponse | EventsSummaryResponse
     """
 
     return sync_detailed(
@@ -132,7 +132,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     from_: str | Unset = UNSET,
     to: str | Unset = UNSET,
-) -> Response[ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse]:
+) -> Response[ErrorResponse | EventsSummaryResponse]:
     """Event summary counts
 
      Returns aggregated event counts for the requested window: totals, failure counts, breakdowns by
@@ -147,7 +147,7 @@ async def asyncio_detailed(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse]
+        Response[ErrorResponse | EventsSummaryResponse]
     """
 
     kwargs = _get_kwargs(
@@ -165,7 +165,7 @@ async def asyncio(
     client: AuthenticatedClient,
     from_: str | Unset = UNSET,
     to: str | Unset = UNSET,
-) -> ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse | None:
+) -> ErrorResponse | EventsSummaryResponse | None:
     """Event summary counts
 
      Returns aggregated event counts for the requested window: totals, failure counts, breakdowns by
@@ -180,7 +180,7 @@ async def asyncio(
         httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ApiEndpointsErrorResponse | ApiEndpointsEventsSummaryResponse
+        ErrorResponse | EventsSummaryResponse
     """
 
     return (

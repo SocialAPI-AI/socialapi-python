@@ -1,0 +1,112 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.interaction import Interaction
+
+
+T = TypeVar("T", bound="MentionsListResponse")
+
+
+@_attrs_define
+class MentionsListResponse:
+    """
+    Attributes:
+        count (int):
+        data (list[Interaction] | None):
+        next_cursor (str | Unset):
+    """
+
+    count: int
+    data: list[Interaction] | None
+    next_cursor: str | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        count = self.count
+
+        data: list[dict[str, Any]] | None
+        if isinstance(self.data, list):
+            data = []
+            for data_type_0_item_data in self.data:
+                data_type_0_item = data_type_0_item_data.to_dict()
+                data.append(data_type_0_item)
+
+        else:
+            data = self.data
+
+        next_cursor = self.next_cursor
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "count": count,
+                "data": data,
+            }
+        )
+        if next_cursor is not UNSET:
+            field_dict["next_cursor"] = next_cursor
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.interaction import Interaction  # noqa: PLC0415
+
+        d = dict(src_dict)
+        count = d.pop("count")
+
+        def _parse_data(data: object) -> list[Interaction] | None:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                data_type_0 = []
+                _data_type_0 = data
+                for data_type_0_item_data in _data_type_0:
+                    data_type_0_item = Interaction.from_dict(data_type_0_item_data)
+
+                    data_type_0.append(data_type_0_item)
+
+                return data_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[Interaction] | None, data)
+
+        data = _parse_data(d.pop("data"))
+
+        next_cursor = d.pop("next_cursor", UNSET)
+
+        mentions_list_response = cls(
+            count=count,
+            data=data,
+            next_cursor=next_cursor,
+        )
+
+        mentions_list_response.additional_properties = d
+        return mentions_list_response
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties
