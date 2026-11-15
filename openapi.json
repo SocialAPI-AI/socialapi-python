@@ -4139,6 +4139,26 @@
               }
             }
           },
+          "403": {
+            "description": "The key's scopes do not include inbox:read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Account not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
           "501": {
             "description": "Platform does not support comment replies",
             "content": {
@@ -4294,6 +4314,16 @@
               }
             }
           },
+          "403": {
+            "description": "The key's scopes do not include dms:read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Conversation not found",
             "content": {
@@ -4362,6 +4392,16 @@
           },
           "401": {
             "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The key's scopes do not include dms:read",
             "content": {
               "application/json": {
                 "schema": {
@@ -4443,6 +4483,16 @@
               }
             }
           },
+          "403": {
+            "description": "The key's scopes do not include dms:read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Conversation not found",
             "content": {
@@ -4500,7 +4550,7 @@
             }
           },
           "400": {
-            "description": "Invalid request body, missing required fields, or messaging window closed (platform.instagram.window_closed / platform.facebook.window_closed: the recipient must message you first to reopen the 24-hour window). After the platform refuses a thread for a closed window, later untagged sends on it are refused here with the same code and blocked_locally in the meta, until an inbound message reopens it or 24 hours pass; no credit is charged for those. messaging.human_agent_window_closed: message_tag was sent after the human agent window closed, so the person must message you first.",
+            "description": "Invalid request body, missing required fields, or messaging window closed (platform.instagram.window_closed / platform.facebook.window_closed: the recipient must message you first to reopen the 24-hour window). After the platform refuses a thread for a closed window, later untagged sends on it fail with the same code, at no credit cost, until the recipient messages you again. messaging.human_agent_window_closed: message_tag was sent after the human agent window closed, so the person must message you first.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4843,6 +4893,16 @@
           },
           "401": {
             "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The key's scopes do not include dms:read",
             "content": {
               "application/json": {
                 "schema": {
@@ -6723,7 +6783,7 @@
             }
           },
           "400": {
-            "description": "days out of range",
+            "description": "days is not a whole number from 1 to 365",
             "content": {
               "application/json": {
                 "schema": {
@@ -6868,7 +6928,7 @@
             "BearerAuth": []
           }
         ],
-        "description": "Lists every Page this login can manage, with the brand that holds each. assignable reflects ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page allowance.",
+        "description": "Lists every Page this login can manage, with the brand that holds each. assignable reflects ownership only. When facebook_page_selection is true, assigning can still fail on the per-brand Page allowance. A brand-restricted key does not see Pages held by brands outside its list.",
         "tags": [
           "Facebook"
         ],
@@ -6935,7 +6995,7 @@
             "BearerAuth": []
           }
         ],
-        "description": "Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a Page another of your brands holds moves to the target brand. When facebook_page_selection is true, assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap.",
+        "description": "Assigns one Page from this login to the given brand. Each Page belongs to exactly one brand, so a Page another of your brands holds moves to the target brand. When facebook_page_selection is true, assigning beyond your plan's Facebook Pages per brand returns 403 platform.facebook.page_cap. A brand-restricted key can only move Pages held by brands on its list: any other Page returns 400 validation.page_not_granted.",
         "tags": [
           "Facebook"
         ],
@@ -9837,6 +9897,7 @@
             "BearerAuth": []
           }
         ],
+        "description": "Starts a sync of the account's videos and returns once it is started. Poll GET /accounts/{id}/sync until state leaves \"syncing\", then read the posts. Shares the cooldown and the daily sync limit of POST /accounts/{id}/sync.",
         "tags": [
           "TikTok"
         ],
@@ -9876,8 +9937,28 @@
               }
             }
           },
+          "403": {
+            "description": "The account was not granted the posts.read permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Account not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "accounts.sync_rate_limited: this account was synced too recently. accounts.sync_daily_limit: the plan's daily sync limit is reached. The Retry-After header carries the seconds to wait.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9897,7 +9978,7 @@
             }
           },
           "503": {
-            "description": "Upstream TikTok API error",
+            "description": "The sync could not be started. Retry later.",
             "content": {
               "application/json": {
                 "schema": {
@@ -11110,6 +11191,7 @@
             "BearerAuth": []
           }
         ],
+        "description": "Starts a sync of the account's videos and returns once it is started. Poll GET /accounts/{id}/sync until state leaves \"syncing\", then read the posts. Shares the cooldown and the daily sync limit of POST /accounts/{id}/sync.",
         "tags": [
           "YouTube"
         ],
@@ -11149,8 +11231,28 @@
               }
             }
           },
+          "403": {
+            "description": "The account was not granted the posts.read permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Account not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api_endpoints.ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "accounts.sync_rate_limited: this account was synced too recently. accounts.sync_daily_limit: the plan's daily sync limit is reached. The Retry-After header carries the seconds to wait.",
             "content": {
               "application/json": {
                 "schema": {
@@ -11170,7 +11272,7 @@
             }
           },
           "503": {
-            "description": "Upstream YouTube API error",
+            "description": "The sync could not be started. Retry later.",
             "content": {
               "application/json": {
                 "schema": {
