@@ -1,40 +1,34 @@
-"""Webhook signature verification helper.
-
-Usage::
-
-    from socialapi.webhooks import verify_signature
-
-    is_valid = verify_signature(
-        secret="whsec_...",
-        payload=request.body,
-        signature=request.headers["X-SocialAPI-Signature"],
-    )
-"""
+"""Webhook signature verification. Hand-written: copied in by scripts/generate.sh."""
 
 from __future__ import annotations
 
 import hashlib
 import hmac
+import time
+from collections.abc import Mapping
+
+DEFAULT_TOLERANCE_SECONDS = 300
 
 
-def verify_signature(*, secret: str, payload: bytes, signature: str) -> bool:
-    """Verify a webhook payload signature using HMAC-SHA256.
+def verify_webhook(
+    secret: str,
+    body: bytes,
+    headers: Mapping[str, str],
+    tolerance_seconds: int = DEFAULT_TOLERANCE_SECONDS,
+    now: float | None = None,
+) -> bool:
+    """Return True when a delivery's X-SocialAPI-Signature-V2 matches and its timestamp is recent.
 
-    The SocialAPI server signs every delivery with
-    ``X-SocialAPI-Signature: sha256=<hex_digest>`` where the digest is
-    ``HMAC-SHA256(secret, payload)``.  This helper performs a constant-time
-    comparison so it is safe to use in request handlers.
-
-    Args:
-        secret: The endpoint secret returned when the webhook was created
-            (``whsec_...``).
-        payload: The raw request body bytes exactly as received.
-        signature: The value of the ``X-SocialAPI-Signature`` header,
-            e.g. ``sha256=abc123...``.
-
-    Returns:
-        ``True`` if the signature matches, ``False`` otherwise.
+    Pass the raw request body, before any JSON decoding. Header lookup is case-insensitive.
     """
-    mac = hmac.new(secret.encode(), payload, hashlib.sha256)
-    expected = "sha256=" + mac.hexdigest()
-    return hmac.compare_digest(expected, signature)
+    lower = {k.lower(): v for k, v in headers.items()}
+    ts = lower.get("x-socialapi-timestamp", "")
+    sig = lower.get("x-socialapi-signature-v2", "")
+    try:
+        age = abs((time.time() if now is None else now) - int(ts))
+    except ValueError:
+        return False
+    if age > tolerance_seconds:
+        return False
+    expected = "sha256=" + hmac.new(secret.encode(), ts.encode() + b"." + body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, sig)

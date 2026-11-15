@@ -4,8 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "socialapi"
-dynamic = ["version"]
-description = "Official Python SDK for SocialAPI -- unified social media inbox API"
+# Written by .github/workflows/release.yml on each release.
+version = "0.4.0"
+description = "Official Python SDK for SocialAPI, generated from the OpenAPI spec"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
@@ -15,35 +16,21 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Typing :: Typed",
 ]
 dependencies = [
-    "httpx>=0.27.0",
-    "pydantic>=2.0.0",
+    "httpx2>=2.0",
+    "attrs>=23.1.0",
+    "python-dateutil>=2.8.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.24",
-    "pytest-httpx>=0.30",
-    "pytest-cov>=5.0",
-    "ruff>=0.8",
-    "pyright>=1.1",
-    "build>=1.0",
-]
+dev = ["pytest>=8.0", "ruff>=0.8"]
 
 [project.urls]
 Homepage = "https://social-api.ai"
 Documentation = "https://docs.social-api.ai"
-Repository = "https://github.com/social-api-ai/socialapi-python"
-Changelog = "https://github.com/social-api-ai/socialapi-python/blob/main/CHANGELOG.md"
-
-[tool.hatch.version]
-path = "src/socialapi/_version.py"
+Repository = "https://github.com/SocialAPI-AI/socialapi-python"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/socialapi"]
@@ -51,31 +38,7 @@ packages = ["src/socialapi"]
 [tool.ruff]
 target-version = "py311"
 line-length = 120
-src = ["src", "tests"]
-
-[tool.ruff.lint]
-select = [
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "F",    # pyflakes
-    "I",    # isort
-    "N",    # pep8-naming
-    "UP",   # pyupgrade
-    "B",    # flake8-bugbear
-    "SIM",  # flake8-simplify
-    "TCH",  # flake8-type-checking
-    "RUF",  # ruff-specific
-]
-
-[tool.ruff.lint.isort]
-known-first-party = ["socialapi"]
-
-[tool.pyright]
-pythonVersion = "3.11"
-typeCheckingMode = "strict"
-include = ["src"]
-reportPrivateUsage = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-asyncio_mode = "auto"
+pythonpath = ["src"]
