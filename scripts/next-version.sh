@@ -10,7 +10,8 @@ first=$1; shift
 
 git add -A -- "$@" # so new, untracked generated files count as changes
 last=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
-if [ -z "$last" ]; then
+# No tag, or a tag from before generation (no spec in it): first generated release.
+if [ -z "$last" ] || ! git cat-file -e "$last:openapi.json" 2>/dev/null; then
   echo "$first"
   exit 0
 fi

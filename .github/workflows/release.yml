@@ -45,7 +45,9 @@ jobs:
 
       - name: Next version
         id: version
-        run: echo "version=$(bash scripts/next-version.sh "$FIRST_VERSION" src)" >> "$GITHUB_OUTPUT"
+        run: |
+          version=$(bash scripts/next-version.sh "$FIRST_VERSION" src) # an assignment, so a script error fails the step
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Build
         if: steps.version.outputs.version != '' && vars.PUBLISH == 'true'

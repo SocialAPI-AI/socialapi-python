@@ -25,7 +25,7 @@ fi
 
 last=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
 notes=$(mktemp)
-if [ -n "$last" ]; then
+if [ -n "$last" ] && git cat-file -e "$last:openapi.json" 2>/dev/null; then
   base=$(mktemp)
   git show "$last:openapi.json" >"$base"
   oasdiff changelog "$base" openapi.json >"$notes" || true
