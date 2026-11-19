@@ -351,6 +351,7 @@ from .update_key_response import UpdateKeyResponse
 from .update_page_request import UpdatePageRequest
 from .update_post_request import UpdatePostRequest
 from .update_post_request_platform_data import UpdatePostRequestPlatformData
+from .update_post_response import UpdatePostResponse
 from .update_queue_params import UpdateQueueParams
 from .update_queue_response import UpdateQueueResponse
 from .update_webhook_request import UpdateWebhookRequest
@@ -759,6 +760,7 @@ __all__ = (
     "UpdatePageRequest",
     "UpdatePostRequest",
     "UpdatePostRequestPlatformData",
+    "UpdatePostResponse",
     "UpdateQueueParams",
     "UpdateQueueResponse",
     "UpdateWebhookRequest",
