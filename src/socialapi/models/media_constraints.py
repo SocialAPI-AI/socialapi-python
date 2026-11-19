@@ -15,25 +15,37 @@ T = TypeVar("T", bound="MediaConstraints")
 class MediaConstraints:
     """
     Attributes:
+        max_document_pages (int | Unset): Most pages the platform accepts in one document. The platform checks it when
+            it processes the file.
+        max_document_size_bytes (int | Unset): Largest document the platform accepts, in bytes.
         max_image_size_bytes (int | Unset): 0 = not supported
         max_video_duration_sec (int | Unset): 0 = no max
         max_video_fps (int | Unset): 0 = no limit
         max_video_size_bytes (int | Unset): 0 = not supported
         min_video_duration_sec (int | Unset): 0 = no min
+        supported_document_types (list[str] | Unset): Document MIME types the platform publishes as a document post.
+            Empty when the platform accepts no documents.
         supported_image_types (list[str] | Unset): MIME types, e.g. "image/jpeg"
         supported_video_types (list[str] | Unset): MIME types, e.g. "video/mp4"
     """
 
+    max_document_pages: int | Unset = UNSET
+    max_document_size_bytes: int | Unset = UNSET
     max_image_size_bytes: int | Unset = UNSET
     max_video_duration_sec: int | Unset = UNSET
     max_video_fps: int | Unset = UNSET
     max_video_size_bytes: int | Unset = UNSET
     min_video_duration_sec: int | Unset = UNSET
+    supported_document_types: list[str] | Unset = UNSET
     supported_image_types: list[str] | Unset = UNSET
     supported_video_types: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        max_document_pages = self.max_document_pages
+
+        max_document_size_bytes = self.max_document_size_bytes
+
         max_image_size_bytes = self.max_image_size_bytes
 
         max_video_duration_sec = self.max_video_duration_sec
@@ -43,6 +55,10 @@ class MediaConstraints:
         max_video_size_bytes = self.max_video_size_bytes
 
         min_video_duration_sec = self.min_video_duration_sec
+
+        supported_document_types: list[str] | Unset = UNSET
+        if not isinstance(self.supported_document_types, Unset):
+            supported_document_types = self.supported_document_types
 
         supported_image_types: list[str] | Unset = UNSET
         if not isinstance(self.supported_image_types, Unset):
@@ -55,6 +71,10 @@ class MediaConstraints:
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
+        if max_document_pages is not UNSET:
+            field_dict["max_document_pages"] = max_document_pages
+        if max_document_size_bytes is not UNSET:
+            field_dict["max_document_size_bytes"] = max_document_size_bytes
         if max_image_size_bytes is not UNSET:
             field_dict["max_image_size_bytes"] = max_image_size_bytes
         if max_video_duration_sec is not UNSET:
@@ -65,6 +85,8 @@ class MediaConstraints:
             field_dict["max_video_size_bytes"] = max_video_size_bytes
         if min_video_duration_sec is not UNSET:
             field_dict["min_video_duration_sec"] = min_video_duration_sec
+        if supported_document_types is not UNSET:
+            field_dict["supported_document_types"] = supported_document_types
         if supported_image_types is not UNSET:
             field_dict["supported_image_types"] = supported_image_types
         if supported_video_types is not UNSET:
@@ -75,6 +97,10 @@ class MediaConstraints:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
+        max_document_pages = d.pop("max_document_pages", UNSET)
+
+        max_document_size_bytes = d.pop("max_document_size_bytes", UNSET)
+
         max_image_size_bytes = d.pop("max_image_size_bytes", UNSET)
 
         max_video_duration_sec = d.pop("max_video_duration_sec", UNSET)
@@ -85,16 +111,21 @@ class MediaConstraints:
 
         min_video_duration_sec = d.pop("min_video_duration_sec", UNSET)
 
+        supported_document_types = cast(list[str], d.pop("supported_document_types", UNSET))
+
         supported_image_types = cast(list[str], d.pop("supported_image_types", UNSET))
 
         supported_video_types = cast(list[str], d.pop("supported_video_types", UNSET))
 
         media_constraints = cls(
+            max_document_pages=max_document_pages,
+            max_document_size_bytes=max_document_size_bytes,
             max_image_size_bytes=max_image_size_bytes,
             max_video_duration_sec=max_video_duration_sec,
             max_video_fps=max_video_fps,
             max_video_size_bytes=max_video_size_bytes,
             min_video_duration_sec=min_video_duration_sec,
+            supported_document_types=supported_document_types,
             supported_image_types=supported_image_types,
             supported_video_types=supported_video_types,
         )

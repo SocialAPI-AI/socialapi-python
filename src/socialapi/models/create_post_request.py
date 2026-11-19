@@ -58,8 +58,9 @@ class CreatePostRequest:
             body of its own through text or a platform_data field the connector uses
             as the body (e.g. Pinterest's platform_data.description IS the pin body). Example: Check out our new product
             launch! #newproduct.
-        title (str | Unset): Title is an optional post title (used by LinkedIn, Google). Example: Exciting News from
-            Acme Corp.
+        title (str | Unset): Title is an optional post title (used by LinkedIn, Google). On LinkedIn it is the title
+            shown on an attached document (PDF, PPT, PPTX, DOC, DOCX); without it the document takes its file name. Example:
+            Exciting News from Acme Corp.
         visibility (PostVisibility | Unset):
     """
 
