@@ -89,8 +89,10 @@ def sync_detailed(
 ) -> Response[AnalyticsResponseWrapper | ErrorResponse]:
     """Get brand analytics history
 
-     Returns daily history for every account and page in a brand, summed per metric per day. A brand
-    total always reflects the accounts the brand holds right now.
+     Returns the daily counts of the replies, DMs and moderation SocialAPI performed for every account
+    and page in a brand, summed per metric per day. Follower, reach and view figures are not part of
+    this history: read them from the platform insight routes. A brand total always reflects the accounts
+    the brand holds right now.
     Read subjects_counted before drawing a chart. A brand whose accounts did not all report on a given
     day produces a lower sum for that day, and without the count that reads as a decline instead of a
     gap.
@@ -133,8 +135,10 @@ def sync(
 ) -> AnalyticsResponseWrapper | ErrorResponse | None:
     """Get brand analytics history
 
-     Returns daily history for every account and page in a brand, summed per metric per day. A brand
-    total always reflects the accounts the brand holds right now.
+     Returns the daily counts of the replies, DMs and moderation SocialAPI performed for every account
+    and page in a brand, summed per metric per day. Follower, reach and view figures are not part of
+    this history: read them from the platform insight routes. A brand total always reflects the accounts
+    the brand holds right now.
     Read subjects_counted before drawing a chart. A brand whose accounts did not all report on a given
     day produces a lower sum for that day, and without the count that reads as a decline instead of a
     gap.
@@ -172,8 +176,10 @@ async def asyncio_detailed(
 ) -> Response[AnalyticsResponseWrapper | ErrorResponse]:
     """Get brand analytics history
 
-     Returns daily history for every account and page in a brand, summed per metric per day. A brand
-    total always reflects the accounts the brand holds right now.
+     Returns the daily counts of the replies, DMs and moderation SocialAPI performed for every account
+    and page in a brand, summed per metric per day. Follower, reach and view figures are not part of
+    this history: read them from the platform insight routes. A brand total always reflects the accounts
+    the brand holds right now.
     Read subjects_counted before drawing a chart. A brand whose accounts did not all report on a given
     day produces a lower sum for that day, and without the count that reads as a decline instead of a
     gap.
@@ -214,8 +220,10 @@ async def asyncio(
 ) -> AnalyticsResponseWrapper | ErrorResponse | None:
     """Get brand analytics history
 
-     Returns daily history for every account and page in a brand, summed per metric per day. A brand
-    total always reflects the accounts the brand holds right now.
+     Returns the daily counts of the replies, DMs and moderation SocialAPI performed for every account
+    and page in a brand, summed per metric per day. Follower, reach and view figures are not part of
+    this history: read them from the platform insight routes. A brand total always reflects the accounts
+    the brand holds right now.
     Read subjects_counted before drawing a chart. A brand whose accounts did not all report on a given
     day produces a lower sum for that day, and without the count that reads as a decline instead of a
     gap.

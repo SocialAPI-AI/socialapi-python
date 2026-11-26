@@ -93,8 +93,10 @@ def sync_detailed(
 ) -> Response[AnalyticsResponseWrapper | ErrorResponse]:
     """Get account analytics history
 
-     Returns daily history for a connected account: follower levels, reach, and the other metrics the
-    platform publishes. For the account's current figures, use the live insights routes instead.
+     Returns daily counts of the replies, private replies, DMs, review and mention replies, and comment
+    moderation SocialAPI performed for a connected account. An account with none of these in the range
+    returns an empty series. Follower, reach and view figures are not part of this history: read them
+    from the platform insight routes, such as GET /v1/platforms/instagram/accounts/{account_id}/summary.
     Each series names its metric kind (gauge for a level you may diff, flow for a per-day count you may
     sum) and the timezone its days were cut on. Every point also carries how many subjects contributed
     to that day, always present and always at least 1, even for a single-subject account.
@@ -140,8 +142,10 @@ def sync(
 ) -> AnalyticsResponseWrapper | ErrorResponse | None:
     """Get account analytics history
 
-     Returns daily history for a connected account: follower levels, reach, and the other metrics the
-    platform publishes. For the account's current figures, use the live insights routes instead.
+     Returns daily counts of the replies, private replies, DMs, review and mention replies, and comment
+    moderation SocialAPI performed for a connected account. An account with none of these in the range
+    returns an empty series. Follower, reach and view figures are not part of this history: read them
+    from the platform insight routes, such as GET /v1/platforms/instagram/accounts/{account_id}/summary.
     Each series names its metric kind (gauge for a level you may diff, flow for a per-day count you may
     sum) and the timezone its days were cut on. Every point also carries how many subjects contributed
     to that day, always present and always at least 1, even for a single-subject account.
@@ -182,8 +186,10 @@ async def asyncio_detailed(
 ) -> Response[AnalyticsResponseWrapper | ErrorResponse]:
     """Get account analytics history
 
-     Returns daily history for a connected account: follower levels, reach, and the other metrics the
-    platform publishes. For the account's current figures, use the live insights routes instead.
+     Returns daily counts of the replies, private replies, DMs, review and mention replies, and comment
+    moderation SocialAPI performed for a connected account. An account with none of these in the range
+    returns an empty series. Follower, reach and view figures are not part of this history: read them
+    from the platform insight routes, such as GET /v1/platforms/instagram/accounts/{account_id}/summary.
     Each series names its metric kind (gauge for a level you may diff, flow for a per-day count you may
     sum) and the timezone its days were cut on. Every point also carries how many subjects contributed
     to that day, always present and always at least 1, even for a single-subject account.
@@ -227,8 +233,10 @@ async def asyncio(
 ) -> AnalyticsResponseWrapper | ErrorResponse | None:
     """Get account analytics history
 
-     Returns daily history for a connected account: follower levels, reach, and the other metrics the
-    platform publishes. For the account's current figures, use the live insights routes instead.
+     Returns daily counts of the replies, private replies, DMs, review and mention replies, and comment
+    moderation SocialAPI performed for a connected account. An account with none of these in the range
+    returns an empty series. Follower, reach and view figures are not part of this history: read them
+    from the platform insight routes, such as GET /v1/platforms/instagram/accounts/{account_id}/summary.
     Each series names its metric kind (gauge for a level you may diff, flow for a per-day count you may
     sum) and the timezone its days were cut on. Every point also carries how many subjects contributed
     to that day, always present and always at least 1, even for a single-subject account.

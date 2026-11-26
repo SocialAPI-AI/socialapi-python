@@ -80,6 +80,8 @@ def sync_detailed(
      Creates a single-use invite link for an external user to connect a social account to a brand.
     The brand must not already have a connected account for the specified platform, and
     no active (unused, unexpired) invite may exist for the same brand+platform combination.
+    Bluesky, Telegram and App Store Connect connect with credentials, not invite links: connect them
+    with POST /v1/accounts/connect.
 
     Args:
         body (CreateInviteRequest):
@@ -113,6 +115,8 @@ def sync(
      Creates a single-use invite link for an external user to connect a social account to a brand.
     The brand must not already have a connected account for the specified platform, and
     no active (unused, unexpired) invite may exist for the same brand+platform combination.
+    Bluesky, Telegram and App Store Connect connect with credentials, not invite links: connect them
+    with POST /v1/accounts/connect.
 
     Args:
         body (CreateInviteRequest):
@@ -141,6 +145,8 @@ async def asyncio_detailed(
      Creates a single-use invite link for an external user to connect a social account to a brand.
     The brand must not already have a connected account for the specified platform, and
     no active (unused, unexpired) invite may exist for the same brand+platform combination.
+    Bluesky, Telegram and App Store Connect connect with credentials, not invite links: connect them
+    with POST /v1/accounts/connect.
 
     Args:
         body (CreateInviteRequest):
@@ -172,6 +178,8 @@ async def asyncio(
      Creates a single-use invite link for an external user to connect a social account to a brand.
     The brand must not already have a connected account for the specified platform, and
     no active (unused, unexpired) invite may exist for the same brand+platform combination.
+    Bluesky, Telegram and App Store Connect connect with credentials, not invite links: connect them
+    with POST /v1/accounts/connect.
 
     Args:
         body (CreateInviteRequest):
