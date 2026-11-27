@@ -27,6 +27,8 @@ class PendingConnectionDetailResponse:
         expires_at (datetime.datetime):  Example: 2026-07-04T12:30:00Z.
         platform (Platform):
         profiles (list[PendingProfile]):
+        brand_id (str | Unset): The brand_id passed when the connection was started. Check it against the brand you
+            expect before calling select. Example: b7e3c1a2-4f5d-4e8a-9b1c-2d3e4f5a6b7c.
         login_id (str | Unset): login_id identifies the login and is set for Facebook, Google and LinkedIn.
             pages and lost_access are Facebook page-selection only.
         lost_access (list[LostPageAccess] | Unset):
@@ -37,6 +39,7 @@ class PendingConnectionDetailResponse:
     expires_at: datetime.datetime
     platform: Platform
     profiles: list[PendingProfile]
+    brand_id: str | Unset = UNSET
     login_id: str | Unset = UNSET
     lost_access: list[LostPageAccess] | Unset = UNSET
     pages: list[PendingPage] | Unset = UNSET
@@ -53,6 +56,8 @@ class PendingConnectionDetailResponse:
         for profiles_item_data in self.profiles:
             profiles_item = profiles_item_data.to_dict()
             profiles.append(profiles_item)
+
+        brand_id = self.brand_id
 
         login_id = self.login_id
 
@@ -80,6 +85,8 @@ class PendingConnectionDetailResponse:
                 "profiles": profiles,
             }
         )
+        if brand_id is not UNSET:
+            field_dict["brand_id"] = brand_id
         if login_id is not UNSET:
             field_dict["login_id"] = login_id
         if lost_access is not UNSET:
@@ -109,6 +116,8 @@ class PendingConnectionDetailResponse:
 
             profiles.append(profiles_item)
 
+        brand_id = d.pop("brand_id", UNSET)
+
         login_id = d.pop("login_id", UNSET)
 
         _lost_access = d.pop("lost_access", UNSET)
@@ -134,6 +143,7 @@ class PendingConnectionDetailResponse:
             expires_at=expires_at,
             platform=platform,
             profiles=profiles,
+            brand_id=brand_id,
             login_id=login_id,
             lost_access=lost_access,
             pages=pages,
