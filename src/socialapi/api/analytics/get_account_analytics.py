@@ -93,10 +93,19 @@ def sync_detailed(
 ) -> Response[AnalyticsResponseWrapper | ErrorResponse]:
     """Get account analytics history
 
-     Returns daily counts of the replies, private replies, DMs, review and mention replies, and comment
-    moderation SocialAPI performed for a connected account. An account with none of these in the range
-    returns an empty series. Follower, reach and view figures are not part of this history: read them
-    from the platform insight routes, such as GET /v1/platforms/instagram/accounts/{account_id}/summary.
+     Returns daily history for a connected account: its follower count, its following count where the
+    platform publishes one, and the daily counts of the replies, private replies, DMs, review and
+    mention replies, and comment moderation SocialAPI performed. An account with none of these in the
+    range returns an empty series.
+    Follower history covers Instagram, Facebook Pages, Threads, TikTok, YouTube, LinkedIn, Bluesky and
+    Zalo, one point per day, under followers_count (TikTok, Bluesky, Zalo), instagram_followers_count,
+    threads_followers_count, linkedin_follower_count, subscriber_count (YouTube) and page_follows
+    (Facebook Pages). following_count is the number of accounts the account follows, on Instagram,
+    TikTok and Bluesky. Follower history starts on the first day SocialAPI tracks the account, so
+    earlier days have no points, and a day without a reading has no point: days_spanned on the next
+    point says how many days its change covers. Reach and view figures are not part of this history:
+    read them from the platform insight routes, such as GET
+    /v1/platforms/instagram/accounts/{account_id}/summary.
     Each series names its metric kind (gauge for a level you may diff, flow for a per-day count you may
     sum) and the timezone its days were cut on. Every point also carries how many subjects contributed
     to that day, always present and always at least 1, even for a single-subject account.
@@ -142,10 +151,19 @@ def sync(
 ) -> AnalyticsResponseWrapper | ErrorResponse | None:
     """Get account analytics history
 
-     Returns daily counts of the replies, private replies, DMs, review and mention replies, and comment
-    moderation SocialAPI performed for a connected account. An account with none of these in the range
-    returns an empty series. Follower, reach and view figures are not part of this history: read them
-    from the platform insight routes, such as GET /v1/platforms/instagram/accounts/{account_id}/summary.
+     Returns daily history for a connected account: its follower count, its following count where the
+    platform publishes one, and the daily counts of the replies, private replies, DMs, review and
+    mention replies, and comment moderation SocialAPI performed. An account with none of these in the
+    range returns an empty series.
+    Follower history covers Instagram, Facebook Pages, Threads, TikTok, YouTube, LinkedIn, Bluesky and
+    Zalo, one point per day, under followers_count (TikTok, Bluesky, Zalo), instagram_followers_count,
+    threads_followers_count, linkedin_follower_count, subscriber_count (YouTube) and page_follows
+    (Facebook Pages). following_count is the number of accounts the account follows, on Instagram,
+    TikTok and Bluesky. Follower history starts on the first day SocialAPI tracks the account, so
+    earlier days have no points, and a day without a reading has no point: days_spanned on the next
+    point says how many days its change covers. Reach and view figures are not part of this history:
+    read them from the platform insight routes, such as GET
+    /v1/platforms/instagram/accounts/{account_id}/summary.
     Each series names its metric kind (gauge for a level you may diff, flow for a per-day count you may
     sum) and the timezone its days were cut on. Every point also carries how many subjects contributed
     to that day, always present and always at least 1, even for a single-subject account.
@@ -186,10 +204,19 @@ async def asyncio_detailed(
 ) -> Response[AnalyticsResponseWrapper | ErrorResponse]:
     """Get account analytics history
 
-     Returns daily counts of the replies, private replies, DMs, review and mention replies, and comment
-    moderation SocialAPI performed for a connected account. An account with none of these in the range
-    returns an empty series. Follower, reach and view figures are not part of this history: read them
-    from the platform insight routes, such as GET /v1/platforms/instagram/accounts/{account_id}/summary.
+     Returns daily history for a connected account: its follower count, its following count where the
+    platform publishes one, and the daily counts of the replies, private replies, DMs, review and
+    mention replies, and comment moderation SocialAPI performed. An account with none of these in the
+    range returns an empty series.
+    Follower history covers Instagram, Facebook Pages, Threads, TikTok, YouTube, LinkedIn, Bluesky and
+    Zalo, one point per day, under followers_count (TikTok, Bluesky, Zalo), instagram_followers_count,
+    threads_followers_count, linkedin_follower_count, subscriber_count (YouTube) and page_follows
+    (Facebook Pages). following_count is the number of accounts the account follows, on Instagram,
+    TikTok and Bluesky. Follower history starts on the first day SocialAPI tracks the account, so
+    earlier days have no points, and a day without a reading has no point: days_spanned on the next
+    point says how many days its change covers. Reach and view figures are not part of this history:
+    read them from the platform insight routes, such as GET
+    /v1/platforms/instagram/accounts/{account_id}/summary.
     Each series names its metric kind (gauge for a level you may diff, flow for a per-day count you may
     sum) and the timezone its days were cut on. Every point also carries how many subjects contributed
     to that day, always present and always at least 1, even for a single-subject account.
@@ -233,10 +260,19 @@ async def asyncio(
 ) -> AnalyticsResponseWrapper | ErrorResponse | None:
     """Get account analytics history
 
-     Returns daily counts of the replies, private replies, DMs, review and mention replies, and comment
-    moderation SocialAPI performed for a connected account. An account with none of these in the range
-    returns an empty series. Follower, reach and view figures are not part of this history: read them
-    from the platform insight routes, such as GET /v1/platforms/instagram/accounts/{account_id}/summary.
+     Returns daily history for a connected account: its follower count, its following count where the
+    platform publishes one, and the daily counts of the replies, private replies, DMs, review and
+    mention replies, and comment moderation SocialAPI performed. An account with none of these in the
+    range returns an empty series.
+    Follower history covers Instagram, Facebook Pages, Threads, TikTok, YouTube, LinkedIn, Bluesky and
+    Zalo, one point per day, under followers_count (TikTok, Bluesky, Zalo), instagram_followers_count,
+    threads_followers_count, linkedin_follower_count, subscriber_count (YouTube) and page_follows
+    (Facebook Pages). following_count is the number of accounts the account follows, on Instagram,
+    TikTok and Bluesky. Follower history starts on the first day SocialAPI tracks the account, so
+    earlier days have no points, and a day without a reading has no point: days_spanned on the next
+    point says how many days its change covers. Reach and view figures are not part of this history:
+    read them from the platform insight routes, such as GET
+    /v1/platforms/instagram/accounts/{account_id}/summary.
     Each series names its metric kind (gauge for a level you may diff, flow for a per-day count you may
     sum) and the timezone its days were cut on. Every point also carries how many subjects contributed
     to that day, always present and always at least 1, even for a single-subject account.

@@ -89,10 +89,12 @@ def sync_detailed(
 ) -> Response[AnalyticsResponseWrapper | ErrorResponse]:
     """Get brand analytics history
 
-     Returns the daily counts of the replies, DMs and moderation SocialAPI performed for every account
-    and page in a brand, summed per metric per day. Follower, reach and view figures are not part of
-    this history: read them from the platform insight routes. A brand total always reflects the accounts
-    the brand holds right now.
+     Returns daily history for every account and page in a brand, summed per metric per day: follower and
+    following counts, and the daily counts of the replies, DMs and moderation SocialAPI performed. Each
+    platform's follower metric keeps its own name (see the account history route), so a brand on several
+    platforms returns one follower series per platform. Reach and view figures are not part of this
+    history: read them from the platform insight routes. A brand total always reflects the accounts the
+    brand holds right now.
     Read subjects_counted before drawing a chart. A brand whose accounts did not all report on a given
     day produces a lower sum for that day, and without the count that reads as a decline instead of a
     gap.
@@ -135,10 +137,12 @@ def sync(
 ) -> AnalyticsResponseWrapper | ErrorResponse | None:
     """Get brand analytics history
 
-     Returns the daily counts of the replies, DMs and moderation SocialAPI performed for every account
-    and page in a brand, summed per metric per day. Follower, reach and view figures are not part of
-    this history: read them from the platform insight routes. A brand total always reflects the accounts
-    the brand holds right now.
+     Returns daily history for every account and page in a brand, summed per metric per day: follower and
+    following counts, and the daily counts of the replies, DMs and moderation SocialAPI performed. Each
+    platform's follower metric keeps its own name (see the account history route), so a brand on several
+    platforms returns one follower series per platform. Reach and view figures are not part of this
+    history: read them from the platform insight routes. A brand total always reflects the accounts the
+    brand holds right now.
     Read subjects_counted before drawing a chart. A brand whose accounts did not all report on a given
     day produces a lower sum for that day, and without the count that reads as a decline instead of a
     gap.
@@ -176,10 +180,12 @@ async def asyncio_detailed(
 ) -> Response[AnalyticsResponseWrapper | ErrorResponse]:
     """Get brand analytics history
 
-     Returns the daily counts of the replies, DMs and moderation SocialAPI performed for every account
-    and page in a brand, summed per metric per day. Follower, reach and view figures are not part of
-    this history: read them from the platform insight routes. A brand total always reflects the accounts
-    the brand holds right now.
+     Returns daily history for every account and page in a brand, summed per metric per day: follower and
+    following counts, and the daily counts of the replies, DMs and moderation SocialAPI performed. Each
+    platform's follower metric keeps its own name (see the account history route), so a brand on several
+    platforms returns one follower series per platform. Reach and view figures are not part of this
+    history: read them from the platform insight routes. A brand total always reflects the accounts the
+    brand holds right now.
     Read subjects_counted before drawing a chart. A brand whose accounts did not all report on a given
     day produces a lower sum for that day, and without the count that reads as a decline instead of a
     gap.
@@ -220,10 +226,12 @@ async def asyncio(
 ) -> AnalyticsResponseWrapper | ErrorResponse | None:
     """Get brand analytics history
 
-     Returns the daily counts of the replies, DMs and moderation SocialAPI performed for every account
-    and page in a brand, summed per metric per day. Follower, reach and view figures are not part of
-    this history: read them from the platform insight routes. A brand total always reflects the accounts
-    the brand holds right now.
+     Returns daily history for every account and page in a brand, summed per metric per day: follower and
+    following counts, and the daily counts of the replies, DMs and moderation SocialAPI performed. Each
+    platform's follower metric keeps its own name (see the account history route), so a brand on several
+    platforms returns one follower series per platform. Reach and view figures are not part of this
+    history: read them from the platform insight routes. A brand total always reflects the accounts the
+    brand holds right now.
     Read subjects_counted before drawing a chart. A brand whose accounts did not all report on a given
     day produces a lower sum for that day, and without the count that reads as a decline instead of a
     gap.
